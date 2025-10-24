@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { MainLayout } from '~/components/layouts/main';
+import { Providers } from '~/components/layouts/providers';
 import { siteConfig } from '~/lib/site';
 import './globals.css';
 
@@ -47,7 +49,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <Providers>
+          <MainLayout>{children}</MainLayout>
+        </Providers>
       </body>
     </html>
   );
