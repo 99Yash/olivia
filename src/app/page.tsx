@@ -1,63 +1,66 @@
-import Image from "next/image";
+import Link from 'next/link';
+import { Button } from '~/components/ui/button';
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="relative flex h-full items-center justify-center overflow-hidden bg-background">
+      {/* Decorative gradient burst - top left */}
+      <div className="pointer-events-none absolute -left-32 -top-32 h-64 w-64 rounded-full bg-linear-to-br from-rose-400/35 via-pink-400/20 to-transparent blur-3xl dark:from-rose-500/25 dark:via-pink-500/10" />
+
+      {/* Decorative gradient burst - top right */}
+      <div className="pointer-events-none absolute -right-32 -top-40 h-80 w-80 rounded-full bg-linear-to-bl from-violet-400/35 via-purple-400/20 to-transparent blur-3xl dark:from-violet-500/25 dark:via-purple-500/10" />
+
+      {/* Decorative gradient burst - bottom left */}
+      <div className="pointer-events-none absolute -bottom-32 -left-40 h-80 w-80 rounded-full bg-linear-to-tr from-cyan-400/35 via-sky-400/20 to-transparent blur-3xl dark:from-cyan-500/25 dark:via-sky-500/10" />
+
+      {/* Decorative gradient burst - bottom right */}
+      <div className="pointer-events-none absolute -bottom-40 -right-32 h-72 w-72 rounded-full bg-linear-to-tl from-fuchsia-400/35 via-pink-400/20 to-transparent blur-3xl dark:from-fuchsia-500/25 dark:via-pink-500/10" />
+
+      {/* Decorative gradient burst - center top */}
+      <div className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 h-96 w-96 rounded-full bg-linear-to-b from-indigo-400/25 via-blue-400/15 to-transparent blur-3xl dark:from-indigo-500/15 dark:via-blue-500/8" />
+
+      {/* Decorative gradient burst - center left */}
+      <div className="pointer-events-none absolute left-1/4 top-1/2 -translate-y-1/2 h-80 w-80 rounded-full bg-linear-to-r from-amber-400/20 via-orange-400/10 to-transparent blur-3xl dark:from-amber-500/12 dark:via-orange-500/6" />
+
+      {/* Decorative gradient burst - center right */}
+      <div className="pointer-events-none absolute right-1/4 top-1/2 -translate-y-1/2 h-80 w-80 rounded-full bg-linear-to-l from-green-400/20 via-emerald-400/10 to-transparent blur-3xl dark:from-green-500/12 dark:via-emerald-500/6" />
+
+      <main className="relative z-10 flex w-full max-w-4xl flex-col items-center justify-center px-6 py-16 text-center">
+        <div className="mb-12">
+          <h1 className="heading-xl mb-6 text-balance text-foreground">
+            Olivia
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-balance text-xl text-muted-foreground sm:text-2xl lg:text-3xl">
+            The most <span className="text-emphasis">sophisticated</span> AI
+            assistant for building your{' '}
+            <span className="text-highlight">resume</span>
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        <div className="mb-12 max-w-2xl">
+          <p className="text-pretty text-lg leading-relaxed text-muted-foreground">
+            Transform your career with{' '}
+            <span className="font-semibold text-foreground">
+              AI-powered resume building
+            </span>
+            . Create professional, ATS-optimized resumes that stand out to
+            employers and land you your dream job.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <Button
+            asChild
+            size="lg"
+            className="group px-8 py-4 text-lg font-semibold tracking-tight shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <Link href="/signin">
+              Get Started
+              <span className="ml-2 inline-block transition-transform group-hover:translate-x-1">
+                →
+              </span>
+            </Link>
+          </Button>
         </div>
       </main>
     </div>

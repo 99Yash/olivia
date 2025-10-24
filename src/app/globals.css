@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -118,5 +118,137 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 5px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: background-color 0.2s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--ring);
+    background-clip: padding-box;
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-color: var(--border) transparent;
+    scrollbar-width: thin;
+  }
+
+  *:hover {
+    scrollbar-color: var(--ring) transparent;
+  }
+
+  /* Text gradient utilities */
+  .text-gradient {
+    @apply bg-gradient-to-r from-foreground via-foreground/90 to-foreground/80 bg-clip-text text-transparent;
+  }
+
+  .text-gradient-brand {
+    @apply bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-600 bg-clip-text text-transparent dark:from-violet-400 dark:via-fuchsia-400 dark:to-pink-400;
+  }
+
+  .text-gradient-subtle {
+    @apply bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent;
+  }
+
+  /* Text highlights and emphasis */
+  .text-highlight {
+    @apply relative inline-block;
+  }
+
+  .text-highlight::after {
+    content: '';
+    @apply absolute -bottom-1 left-0 right-0 -z-10 h-3 bg-gradient-to-r from-violet-500/30 via-fuchsia-500/30 to-pink-500/30 blur-sm;
+  }
+
+  .text-emphasis {
+    @apply relative inline-block rounded-md bg-gradient-to-r from-violet-500/10 via-fuchsia-500/10 to-pink-500/10 px-2 py-0.5 font-medium;
+  }
+
+  /* Enhanced typography */
+  .heading-xl {
+    @apply text-6xl font-bold tracking-tighter sm:text-7xl lg:text-8xl;
+    letter-spacing: -0.04em;
+  }
+
+  .heading-lg {
+    @apply text-4xl font-bold tracking-tighter sm:text-5xl lg:text-6xl;
+    letter-spacing: -0.03em;
+  }
+
+  .heading-md {
+    @apply text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl;
+    letter-spacing: -0.02em;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* Subtle glow effects */
+  .glow-text {
+    @apply drop-shadow-[0_0_15px_rgba(168,85,247,0.15)];
+  }
+
+  .glow-text-strong {
+    @apply drop-shadow-[0_0_25px_rgba(168,85,247,0.25)];
+  }
+
+  /* Code-like styling for emphasis */
+  .inline-code {
+    @apply rounded-md bg-muted px-1.5 py-0.5 font-mono text-sm font-medium text-foreground;
+  }
+
+  /* Better link styling */
+  .link-underline {
+    @apply relative inline-block text-foreground/80 transition-colors hover:text-foreground;
+  }
+
+  .link-underline::after {
+    content: '';
+    @apply absolute bottom-0 left-0 h-px w-full origin-left scale-x-0 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 transition-transform duration-300;
+  }
+
+  .link-underline:hover::after {
+    @apply scale-x-100;
+  }
+
+  /* Subtle animations */
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  .shimmer {
+    background-size: 200% 100%;
+    animation: shimmer 8s linear infinite;
+  }
+
+  /* Better focus states */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
   }
 }
