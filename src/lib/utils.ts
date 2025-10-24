@@ -1,6 +1,51 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+import { z } from 'zod';
+import { GitHub, Google } from '~/components/ui/icons';
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
+
+export const authOptionsSchema = z.enum(['EMAIL', 'GOOGLE', 'GITHUB']);
+export type AuthOptionsType = z.infer<typeof authOptionsSchema>;
+
+export const LOCAL_STORAGE_SCHEMAS = {
+  LAST_AUTH_METHOD: authOptionsSchema,
+} as const;
+
+export type LocalStorageKey = keyof typeof LOCAL_STORAGE_SCHEMAS;
+
+export type LocalStorageValue<K extends LocalStorageKey> = z.infer<
+  (typeof LOCAL_STORAGE_SCHEMAS)[K] & z.ZodTypeAny
+>;
+
+interface OAuthProvider {
+  id: string;
+  name: string;
+  icon?: React.ComponentType<{ className?: string }>;
+}
+
+export const OAUTH_PROVIDERS: Record<
+  Lowercase<Exclude<AuthOptionsType, 'EMAIL'>>,
+  OAuthProvider
+> = {
+  github: {
+    id: 'github',
+    name: 'GitHub',
+    icon: GitHub,
+  },
+  google: {
+    id: 'google',
+    name: 'Google',
+    icon: Google,
+  },
+} as const;
+
+export type OAuthProviderId = keyof typeof OAUTH_PROVIDERS;
+
+export const getProviderById = (
+  id: OAuthProviderId
+): OAuthProvider | undefined => {
+  return OAUTH_PROVIDERS[id];
+};
