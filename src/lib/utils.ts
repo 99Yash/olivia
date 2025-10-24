@@ -1,3 +1,4 @@
+import { APIError } from 'better-auth';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import * as z from 'zod/v4';
@@ -21,6 +22,8 @@ export function getErrorMessage(err: unknown): string {
   if (typeof err === 'string') {
     return err;
   } else if (err instanceof AppError) {
+    return err.message;
+  } else if (err instanceof APIError) {
     return err.message;
   } else if (err instanceof z.ZodError) {
     return err.issues.map((e) => e.message).join(', ') ?? unknownError;
