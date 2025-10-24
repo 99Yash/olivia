@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /*.json$
+
+Crawl-delay: 1
+Request-rate: 1/1s
+
+Sitemap: https://olivia.ygkr.live/sitemap.xml
