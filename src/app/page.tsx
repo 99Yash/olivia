@@ -27,25 +27,39 @@ export default function Home() {
 
       <main className="relative z-10 flex w-full max-w-4xl flex-col items-center justify-center px-6 py-16 text-center">
         <div className="mb-12">
-          <h1 className="mb-6 text-6xl font-bold tracking-tight text-foreground sm:text-7xl lg:text-8xl">
+          <h1 className="heading-xl mb-6 text-balance text-foreground">
             Olivia
           </h1>
-          <p className="text-xl text-muted-foreground sm:text-2xl lg:text-3xl">
-            The most sophisticated AI assistant for building your resume
+          <p className="text-balance text-xl text-muted-foreground sm:text-2xl lg:text-3xl">
+            The most <span className="text-emphasis">sophisticated</span> AI
+            assistant for building your{' '}
+            <span className="text-highlight">resume</span>
           </p>
         </div>
 
         <div className="mb-12 max-w-2xl">
-          <p className="text-lg leading-relaxed text-muted-foreground">
-            Transform your career with AI-powered resume building. Create
-            professional, ATS-optimized resumes that stand out to employers and
-            land you your dream job.
+          <p className="text-pretty text-lg leading-relaxed text-muted-foreground">
+            Transform your career with{' '}
+            <span className="font-semibold text-foreground">
+              AI-powered resume building
+            </span>
+            . Create professional, ATS-optimized resumes that stand out to
+            employers and land you your dream job.
           </p>
         </div>
 
         <div className="flex flex-col gap-4 sm:flex-row">
-          <Button asChild size="lg" className="px-8 py-4 text-lg font-semibold">
-            <Link href="/signin">Get Started</Link>
+          <Button
+            asChild
+            size="lg"
+            className="group px-8 py-4 text-lg font-semibold tracking-tight shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30"
+          >
+            <Link href="/signin">
+              Get Started
+              <span className="ml-2 inline-block transition-transform group-hover:translate-x-1">
+                →
+              </span>
+            </Link>
           </Button>
         </div>
       </main>
