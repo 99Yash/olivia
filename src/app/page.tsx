@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Button } from '~/components/ui/button';
+import { HandOfGod } from '~/components/ui/icons';
 
 export default function Home() {
   return (
@@ -24,6 +25,13 @@ export default function Home() {
 
       {/* Decorative gradient burst - center right */}
       <div className="pointer-events-none absolute right-1/4 top-1/2 -translate-y-1/2 h-80 w-80 rounded-full bg-linear-to-l from-green-400/15 via-emerald-400/8 to-transparent blur-3xl dark:from-green-500/30 dark:via-emerald-500/15" />
+
+      {/* Background SVG */}
+      <div className="pointer-events-none absolute inset-0 z-0 flex items-start justify-center overflow-hidden pt-8">
+        <div className="w-full max-w-7xl opacity-15 transition-all hover:opacity-25 dark:opacity-30 dark:hover:opacity-40">
+          <HandOfGod className="w-full scale-150" />
+        </div>
+      </div>
 
       <main className="relative z-10 flex w-full max-w-4xl flex-col items-center justify-center px-6 py-16 text-center">
         <div className="mb-12">
@@ -67,23 +75,6 @@ export default function Home() {
             . Create professional, ATS-optimized resumes that stand out to
             employers and land you your dream job.
           </p>
-        </div>
-
-        {/* Michelangelo's Hand of God SVG */}
-        <div className="relative mb-16 flex justify-center">
-          <div className="relative w-full max-w-5xl">
-            <img
-              src="/robot_adam.svg"
-              alt="Creation of Adam - Michelangelo's Hand of God"
-              className="w-full max-w-4xl opacity-40 transition-all hover:opacity-60 dark:opacity-50 dark:hover:opacity-70"
-              style={{
-                filter: 'drop-shadow(0 8px 32px rgba(0, 0, 0, 0.15))',
-                transform: 'translateY(-20px)',
-              }}
-            />
-            {/* Enhanced glow effect */}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-amber-400/8 via-yellow-400/4 to-amber-400/8 blur-2xl" />
-          </div>
         </div>
 
         <div className="flex flex-col gap-4 sm:flex-row">
