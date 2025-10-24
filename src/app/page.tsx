@@ -46,7 +46,7 @@ export default function Home() {
             style={{ textWrap: 'balance' }}
           >
             The most{' '}
-            <span className="relative inline-block rounded-md bg-gradient-to-r from-violet-500/10 via-fuchsia-500/10 to-pink-500/10 px-2 py-0.5 font-medium">
+            <span className="relative inline-block rounded-md bg-linear-to-r from-violet-500/10 via-fuchsia-500/10 to-pink-500/10 px-2 py-0.5 font-medium">
               sophisticated
             </span>{' '}
             AI assistant for building your{' '}
