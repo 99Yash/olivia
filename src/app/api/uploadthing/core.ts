@@ -5,7 +5,7 @@ import { auth } from '~/lib/auth/server';
 
 const f = createUploadthing();
 
-const authMiddleware = async (_req: Request) => {
+const authMiddleware = async () => {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -29,9 +29,9 @@ export const oliviaFileRouter = {
     },
   })
     // Set permissions and file types for this FileRoute
-    .middleware(async ({ req }) => {
+    .middleware(async () => {
       // This code runs on your server before upload
-      const user = await authMiddleware(req);
+      const user = await authMiddleware();
 
       // If you throw, the user will not be able to upload
       if (!user) throw new UploadThingError('Unauthorized');
@@ -42,6 +42,42 @@ export const oliviaFileRouter = {
     .onUploadComplete(async ({ metadata, file }) => {
       // This code RUNS ON YOUR SERVER after upload
       console.log('Upload complete for userId:', metadata.userId);
+
+      console.log('file url', file.ufsUrl);
+
+      // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
+      return { uploadedBy: metadata.userId };
+    }),
+
+  // Resume uploader for PDF, DOC, DOCX, TXT files
+  resumeUploader: f({
+    pdf: {
+      maxFileSize: '8MB',
+      maxFileCount: 1,
+    },
+    'application/msword': {
+      maxFileSize: '8MB',
+      maxFileCount: 1,
+    },
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': {
+      maxFileSize: '8MB',
+      maxFileCount: 1,
+    },
+  })
+    // Set permissions and file types for this FileRoute
+    .middleware(async () => {
+      // This code runs on your server before upload
+      const user = await authMiddleware();
+
+      // If you throw, the user will not be able to upload
+      if (!user) throw new UploadThingError('Unauthorized');
+
+      // Whatever is returned here is accessible in onUploadComplete as `metadata`
+      return { userId: user.id };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      // This code RUNS ON YOUR SERVER after upload
+      console.log('Resume upload complete for userId:', metadata.userId);
 
       console.log('file url', file.ufsUrl);
 
