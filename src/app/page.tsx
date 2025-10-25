@@ -1,12 +1,16 @@
 import Link from 'next/link';
 import { buttonVariants } from '~/components/ui/button';
 import { HandOfGod } from '~/components/ui/icons';
+import { UserDropdown } from '~/components/utils/user-ddm';
 import { siteConfig } from '~/lib/site';
 import { cn } from '~/lib/utils';
 
 export default function Home() {
   return (
     <div className="relative flex h-full items-center justify-center overflow-hidden bg-background">
+      <div className="absolute right-4 top-4">
+        <UserDropdown />
+      </div>
       {/* Decorative gradient burst - top left */}
       <div className="pointer-events-none absolute -left-32 -top-32 h-64 w-64 rounded-full bg-linear-to-br from-rose-400/25 via-pink-400/15 to-transparent blur-3xl dark:from-rose-500/40 dark:via-pink-500/25" />
 

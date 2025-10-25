@@ -11,6 +11,9 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
+    requireEmailVerification: false, // Set to true if you want to require email verification
+    minPasswordLength: 8,
+    maxPasswordLength: 128,
   },
   socialProviders: {
     google: {
