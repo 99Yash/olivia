@@ -44,7 +44,7 @@ interface ResumeUploadFormProps {
   className?: React.ComponentProps<'div'>['className'];
 }
 
-export function ResumeUploadForm({ className }: ResumeUploadFormProps) {
+export function ResumeUploadForm({ className }: ResumeUploadFormProps = {}) {
   const [files, setFiles] = React.useState<File[]>([]);
   const { uploadFiles, isUploading } = useUploadFiles(
     FILE_UPLOAD.ENDPOINTS.RESUME
@@ -112,22 +112,25 @@ export function ResumeUploadForm({ className }: ResumeUploadFormProps) {
   }, [files, uploadFiles, form]);
 
   return (
-    <div className={className}>
+    <div className={className || ''}>
       <Form {...form}>
-        <form className="space-y-6">
+        <form className="space-y-8">
           <FormField
             control={form.control}
             name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Resume Title (Optional)</FormLabel>
+                <FormLabel className="text-base font-semibold">
+                  Resume Title (Optional)
+                </FormLabel>
                 <FormControl>
                   <Input
                     placeholder="e.g., Software Engineer Resume 2024"
+                    className="h-11"
                     {...field}
                   />
                 </FormControl>
-                <FormDescription>
+                <FormDescription className="text-sm">
                   A descriptive title for your resume to help you identify it
                   later
                 </FormDescription>
@@ -137,84 +140,96 @@ export function ResumeUploadForm({ className }: ResumeUploadFormProps) {
           />
 
           <div>
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Resume File
-            </label>
-            <div className="mt-2">
+            <label className="text-base font-semibold">Resume File</label>
+            <div className="mt-3">
               <FileUpload
                 accept={FILE_UPLOAD.TYPES.RESUME.ACCEPT}
                 maxFiles={FILE_UPLOAD.COUNT_LIMITS.RESUME}
                 maxSize={FILE_UPLOAD.SIZE_LIMITS.RESUME}
-                className="w-full max-w-md"
+                className="w-full"
                 onAccept={onAccept}
                 onFileReject={onFileReject}
                 multiple={false}
                 disabled={isUploading}
               >
-                <FileUploadDropzone>
-                  <div className="flex flex-col items-center gap-1 text-center">
-                    <div className="flex items-center justify-center rounded-full border p-2.5">
-                      <FileText className="size-6 text-muted-foreground" />
+                <FileUploadDropzone className="min-h-[200px] border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors">
+                  <div className="flex flex-col items-center gap-3 text-center py-4">
+                    <div className="flex items-center justify-center rounded-full border-2 border-muted-foreground/20 bg-muted/30 p-4">
+                      <FileText className="size-8 text-muted-foreground" />
                     </div>
-                    <p className="font-medium text-sm">Upload your resume</p>
-                    <p className="text-muted-foreground text-xs">
-                      PDF, DOC, or DOCX files up to{' '}
-                      {formatFileSize(FILE_UPLOAD.SIZE_LIMITS.RESUME)}
-                    </p>
+                    <div className="space-y-1">
+                      <p className="font-semibold text-base">
+                        Upload your resume
+                      </p>
+                      <p className="text-muted-foreground text-sm">
+                        PDF, DOC, or DOCX files up to{' '}
+                        {formatFileSize(FILE_UPLOAD.SIZE_LIMITS.RESUME)}
+                      </p>
+                    </div>
                   </div>
                   <FileUploadTrigger asChild>
-                    <Button variant="outline" size="sm" className="mt-2 w-fit">
+                    <Button variant="outline" className="mt-4">
                       <Upload className="mr-2 h-4 w-4" />
                       Choose file
                     </Button>
                   </FileUploadTrigger>
                 </FileUploadDropzone>
-                <FileUploadList>
+                <FileUploadList className="mt-4">
                   {files.map((file, index) => (
-                    <FileUploadItem key={index} value={file}>
-                      <div className="flex w-full items-center gap-2">
-                        <FileUploadItemPreview />
-                        <FileUploadItemMetadata />
+                    <FileUploadItem
+                      key={index}
+                      value={file}
+                      className="border-2"
+                    >
+                      <div className="flex w-full items-center gap-3">
+                        <FileUploadItemPreview className="size-12" />
+                        <div className="flex-1 min-w-0">
+                          <FileUploadItemMetadata size="sm" />
+                        </div>
                         <FileUploadItemDelete asChild>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="size-7"
+                            className="size-8 shrink-0 hover:bg-destructive hover:text-destructive-foreground"
                           >
-                            <X />
+                            <X className="size-4" />
                           </Button>
                         </FileUploadItemDelete>
                       </div>
-                      <FileUploadItemProgress />
+                      <FileUploadItemProgress className="mt-3 h-2" />
                     </FileUploadItem>
                   ))}
                 </FileUploadList>
               </FileUpload>
             </div>
-            <p className="text-muted-foreground text-sm mt-2">
-              Your resume will be processed and analyzed to create an optimized
-              version
-            </p>
+            <div className="bg-muted/30 rounded-lg p-4 mt-4">
+              <p className="text-muted-foreground text-sm">
+                Your resume will be processed and analyzed to create an
+                optimized version
+              </p>
+            </div>
           </div>
 
-          <Button
-            type="submit"
-            disabled={isUploading || files.length === 0}
-            className="w-full"
-            onClick={onSubmit}
-          >
-            {isUploading ? (
-              <>
-                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                Uploading Resume...
-              </>
-            ) : (
-              <>
-                <Upload className="mr-2 h-4 w-4" />
-                Upload Resume
-              </>
-            )}
-          </Button>
+          <div className="pt-4 border-t">
+            <Button
+              type="submit"
+              disabled={isUploading || files.length === 0}
+              className="w-full h-12 text-base font-medium"
+              onClick={onSubmit}
+            >
+              {isUploading ? (
+                <>
+                  <div className="mr-2 h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Uploading Resume...
+                </>
+              ) : (
+                <>
+                  <Upload className="mr-2 h-5 w-5" />
+                  Upload Resume
+                </>
+              )}
+            </Button>
+          </div>
         </form>
       </Form>
     </div>

@@ -995,18 +995,18 @@ function getFileIcon(file: File) {
   const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
 
   if (type.startsWith('video/')) {
-    return <FileVideoIcon />;
+    return <FileVideoIcon className="size-6" />;
   }
 
   if (type.startsWith('audio/')) {
-    return <FileAudioIcon />;
+    return <FileAudioIcon className="size-6" />;
   }
 
   if (
     type.startsWith('text/') ||
     ['txt', 'md', 'rtf', 'pdf'].includes(extension)
   ) {
-    return <FileTextIcon />;
+    return <FileTextIcon className="size-6" />;
   }
 
   if (
@@ -1028,21 +1028,21 @@ function getFileIcon(file: File) {
       'cs',
     ].includes(extension)
   ) {
-    return <FileCodeIcon />;
+    return <FileCodeIcon className="size-6" />;
   }
 
   if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2'].includes(extension)) {
-    return <FileArchiveIcon />;
+    return <FileArchiveIcon className="size-6" />;
   }
 
   if (
     ['exe', 'msi', 'app', 'apk', 'deb', 'rpm'].includes(extension) ||
     type.startsWith('application/')
   ) {
-    return <FileCogIcon />;
+    return <FileCogIcon className="size-6" />;
   }
 
-  return <FileIcon />;
+  return <FileIcon className="size-6" />;
 }
 
 interface FileUploadItemPreviewProps extends React.ComponentProps<'div'> {
@@ -1069,9 +1069,9 @@ function FileUploadItemPreview(props: FileUploadItemPreviewProps) {
           <NextImage
             src={url}
             alt={file.name}
-            width={40}
-            height={40}
-            className="size-full object-cover"
+            width={48}
+            height={48}
+            className="size-full object-cover rounded"
             unoptimized
           />
         );
@@ -1103,7 +1103,7 @@ function FileUploadItemPreview(props: FileUploadItemPreviewProps) {
       data-slot="file-upload-preview"
       {...previewProps}
       className={cn(
-        'relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded border bg-accent/50 [&>svg]:size-10',
+        'relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-accent/50 [&>svg]:size-6',
         className
       )}
     >
@@ -1289,7 +1289,7 @@ function FileUploadItemProgress(props: FileUploadItemProgressProps) {
           data-slot="file-upload-progress"
           {...progressProps}
           className={cn(
-            'relative h-1.5 w-full overflow-hidden rounded-full bg-primary/20',
+            'relative h-2 w-full overflow-hidden rounded-full bg-primary/20',
             className
           )}
         >
