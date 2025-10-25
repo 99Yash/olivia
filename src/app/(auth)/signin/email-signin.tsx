@@ -37,11 +37,17 @@ export function EmailSignIn() {
     async ({ email, password }: EmailSignInProps) => {
       setIsLoading(true);
       try {
-        await authClient.signIn.email({
+        const { error } = await authClient.signIn.email({
           email,
           password,
           callbackURL: '/',
         });
+
+        if (error) {
+          setIsLoading(false);
+          toast.error(getErrorMessage(error));
+          return;
+        }
 
         // Persist last used auth method
         if (typeof window !== 'undefined') {
