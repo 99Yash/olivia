@@ -38,34 +38,7 @@ const OAuthButton: React.FC<OAuthButtonProps> = ({
     }
   }, []);
 
-  const handleOAuthSignIn = React.useCallback(async () => {
-    if (!provider) {
-      toast.error('Provider not found');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      await authClient.signIn.social({
-        provider: providerId,
-        callbackURL: '/',
-      });
-
-      // Persist last used auth method
-      if (typeof window !== 'undefined') {
-        setLocalStorageItem(
-          'LAST_AUTH_METHOD',
-          providerId.toUpperCase() as AuthOptionsType
-        );
-      }
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [provider, providerId]);
-
-  const handleOAuthSignUp = React.useCallback(async () => {
+  const handleOAuth = React.useCallback(async () => {
     if (!provider) {
       toast.error('Provider not found');
       return;
@@ -108,7 +81,7 @@ const OAuthButton: React.FC<OAuthButtonProps> = ({
     <Button
       variant="outline"
       className={`w-full relative ${className}`}
-      onClick={isSignUp ? handleOAuthSignUp : handleOAuthSignIn}
+      onClick={handleOAuth}
       disabled={isLoading}
     >
       {renderIcon()}
