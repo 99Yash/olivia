@@ -9,11 +9,8 @@ import { Input } from '~/components/ui/input';
 import { Spinner } from '~/components/ui/spinner';
 import { authClient } from '~/lib/auth/client';
 import { AuthOptionsType } from '~/lib/constants';
-import {
-  getErrorMessage,
-  getLocalStorageItem,
-  setLocalStorageItem,
-} from '~/lib/utils';
+import { getErrorMessage } from '~/lib/errors';
+import { getLocalStorageItem, setLocalStorageItem } from '~/lib/utils';
 
 const schema = z.object({
   email: z.email().max(255, 'Email must be less than 255 characters'),

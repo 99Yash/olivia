@@ -12,11 +12,8 @@ import {
   OAUTH_PROVIDERS,
   OAuthProviderId,
 } from '~/lib/constants';
-import {
-  getErrorMessage,
-  getLocalStorageItem,
-  setLocalStorageItem,
-} from '~/lib/utils';
+import { getErrorMessage } from '~/lib/errors';
+import { getLocalStorageItem, setLocalStorageItem } from '~/lib/utils';
 
 interface OAuthButtonProps {
   providerId: OAuthProviderId;
