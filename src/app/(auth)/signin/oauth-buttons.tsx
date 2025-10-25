@@ -17,9 +17,14 @@ import { getLocalStorageItem, setLocalStorageItem } from '~/lib/utils';
 interface OAuthButtonProps {
   providerId: OAuthProviderId;
   className?: React.ComponentProps<typeof Button>['className'];
+  isSignUp?: boolean;
 }
 
-const OAuthButton: React.FC<OAuthButtonProps> = ({ providerId, className }) => {
+const OAuthButton: React.FC<OAuthButtonProps> = ({
+  providerId,
+  className,
+  isSignUp = false,
+}) => {
   const [lastAuthMethod, setLastAuthMethod] =
     React.useState<AuthOptionsType | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -46,10 +51,40 @@ const OAuthButton: React.FC<OAuthButtonProps> = ({ providerId, className }) => {
         callbackURL: '/',
       });
 
-      setLocalStorageItem(
-        'LAST_AUTH_METHOD',
-        providerId.toUpperCase() as AuthOptionsType
-      );
+      // Persist last used auth method
+      if (typeof window !== 'undefined') {
+        setLocalStorageItem(
+          'LAST_AUTH_METHOD',
+          providerId.toUpperCase() as AuthOptionsType
+        );
+      }
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [provider, providerId]);
+
+  const handleOAuthSignUp = React.useCallback(async () => {
+    if (!provider) {
+      toast.error('Provider not found');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await authClient.signIn.social({
+        provider: providerId,
+        callbackURL: '/',
+      });
+
+      // Persist last used auth method
+      if (typeof window !== 'undefined') {
+        setLocalStorageItem(
+          'LAST_AUTH_METHOD',
+          providerId.toUpperCase() as AuthOptionsType
+        );
+      }
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
@@ -73,12 +108,18 @@ const OAuthButton: React.FC<OAuthButtonProps> = ({ providerId, className }) => {
     <Button
       variant="outline"
       className={`w-full relative ${className}`}
-      onClick={handleOAuthSignIn}
+      onClick={isSignUp ? handleOAuthSignUp : handleOAuthSignIn}
       disabled={isLoading}
     >
       {renderIcon()}
       <span className="text-sm">
-        {isLoading ? 'Signing in…' : `Continue with ${provider.name}`}
+        {isLoading
+          ? isSignUp
+            ? 'Creating account…'
+            : 'Signing in…'
+          : isSignUp
+          ? `Sign up with ${provider.name}`
+          : `Continue with ${provider.name}`}
       </span>
       {isLoading ? (
         <Spinner className="mr-2 bg-background" />
@@ -95,13 +136,15 @@ const OAuthButton: React.FC<OAuthButtonProps> = ({ providerId, className }) => {
 
 export const OAuthButtons: React.FC<{
   className?: React.ComponentProps<typeof Button>['className'];
-}> = ({ className }) => {
+  isSignUp?: boolean;
+}> = ({ className, isSignUp = false }) => {
   return (
     <div className={`space-y-1 ${className}`}>
       {Object.values(OAUTH_PROVIDERS).map((provider) => (
         <OAuthButton
           key={provider.id}
           providerId={provider.id as OAuthProviderId}
+          isSignUp={isSignUp}
         />
       ))}
     </div>

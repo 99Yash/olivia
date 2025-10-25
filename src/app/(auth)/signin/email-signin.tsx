@@ -44,11 +44,18 @@ const signUpSchema = z.object({
 type EmailSignInProps = z.infer<typeof signInSchema>;
 type EmailSignUpProps = z.infer<typeof signUpSchema>;
 
-export function EmailSignIn() {
+interface EmailSignInComponentProps {
+  isSignUp?: boolean;
+  onToggleMode?: () => void;
+}
+
+export function EmailSignIn({
+  isSignUp = false,
+  onToggleMode,
+}: EmailSignInComponentProps) {
   const router = useRouter();
   const [lastAuthMethod, setLastAuthMethod] =
     React.useState<AuthOptionsType | null>(null);
-  const [isSignUp, setIsSignUp] = React.useState(false);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -273,7 +280,7 @@ export function EmailSignIn() {
         <button
           type="button"
           onClick={() => {
-            setIsSignUp(!isSignUp);
+            onToggleMode?.();
             setFormErrors({}); // Clear errors when switching modes
           }}
           className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4"

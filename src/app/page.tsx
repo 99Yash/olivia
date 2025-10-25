@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { buttonVariants } from '~/components/ui/button';
 import { HandOfGod } from '~/components/ui/icons';
 import { UserDropdown } from '~/components/utils/user-ddm';
+import { user } from '~/db/schemas';
 import { siteConfig } from '~/lib/site';
 import { cn } from '~/lib/utils';
 
@@ -83,18 +84,22 @@ export default function Home() {
           </p>
         </div>
 
-        <Link
-          className={cn(
-            buttonVariants({ variant: 'default', size: 'lg' }),
-            'group px-8 py-4 text-lg font-semibold tracking-tight shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30'
-          )}
-          href="/signin"
-        >
-          Upload resume
-          <span className="ml-2 inline-block transition-transform group-hover:translate-x-1">
-            →
-          </span>
-        </Link>
+        {user ? (
+          <Link href="/upload">Upload resume</Link>
+        ) : (
+          <Link
+            className={cn(
+              buttonVariants({ variant: 'default', size: 'lg' }),
+              'group px-8 py-4 text-lg font-semibold tracking-tight shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30'
+            )}
+            href="/signin"
+          >
+            Upload resume
+            <span className="ml-2 inline-block transition-transform group-hover:translate-x-1">
+              →
+            </span>
+          </Link>
+        )}
       </main>
     </div>
   );
