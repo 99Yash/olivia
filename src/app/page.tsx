@@ -67,12 +67,12 @@ export default function Home() {
 
         <div className="mb-8 max-w-2xl">
           <p
-            className="text-lg leading-relaxed text-muted-foreground"
+            className="md:text-lg font-medium leading-relaxed text-muted-foreground"
             style={{ textWrap: 'pretty' }}
           >
             Transform your career with{' '}
             <span className="font-semibold text-foreground">
-              AI-powered resume building
+              AI-powered resumes
             </span>
             . Create professional, ATS-optimized resumes that stand out and
             actually get you hired.
@@ -86,7 +86,7 @@ export default function Home() {
           )}
           href="/signin"
         >
-          Get Started
+          Upload resume
           <span className="ml-2 inline-block transition-transform group-hover:translate-x-1">
             →
           </span>
