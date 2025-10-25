@@ -1,12 +1,14 @@
 'use client';
 
-import { LogOut } from 'lucide-react';
+import { User as BetterAuthUser } from 'better-auth';
+import { Check, LogOut, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import * as React from 'react';
 import { toast } from 'sonner';
 import { authClient } from '~/lib/auth/client';
 import { getErrorMessage } from '~/lib/errors';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import {
   DropdownMenu,
@@ -17,17 +19,10 @@ import {
 } from '../ui/dropdown-menu';
 import { Spinner } from '../ui/spinner';
 
-export function UserDropdown() {
-  const { data: session } = authClient.useSession();
+export function UserDropdown({ user }: { user: BetterAuthUser }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const router = useRouter();
-
-  if (!session?.user) {
-    return null;
-  }
-
-  const user = session.user;
 
   const handleSignOut = async () => {
     try {
@@ -63,17 +58,42 @@ export function UserDropdown() {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-64 p-0" align="end" forceMount>
-        <div className="flex items-center gap-3 p-4">
-          <Avatar className="h-12 w-12">
-            <AvatarImage src={user.image || ''} alt={user.name || ''} />
-            <AvatarFallback className="bg-primary text-primary-foreground text-lg">
-              {getInitials(user.name || 'User')}
-            </AvatarFallback>
-          </Avatar>
+      <DropdownMenuContent className="w-80 p-0" align="end" forceMount>
+        {/* User Profile Section */}
+        <div className="flex items-center gap-3 p-4 pb-3">
+          <div className="relative">
+            <Avatar className="h-12 w-12">
+              <AvatarImage src={user.image || ''} alt={user.name || ''} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-lg">
+                {getInitials(user.name || 'User')}
+              </AvatarFallback>
+            </Avatar>
+            {user.emailVerified && (
+              <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-green-500 border-2 border-background flex items-center justify-center">
+                <Check className="h-2.5 w-2.5 text-white" />
+              </div>
+            )}
+          </div>
           <div className="flex-1 space-y-1">
             <div className="flex items-center gap-2">
               <p className="text-sm font-medium leading-none">{user.name}</p>
+              <Badge
+                variant={user.emailVerified ? 'default' : 'outline'}
+                className={`text-xs px-1.5 py-0.5 h-5 ${
+                  user.emailVerified
+                    ? 'bg-green-500 hover:bg-green-500 text-white'
+                    : 'text-amber-600 border-amber-200'
+                }`}
+              >
+                {user.emailVerified ? (
+                  <>
+                    <Shield className="h-3 w-3 mr-1" />
+                    Verified
+                  </>
+                ) : (
+                  'Unverified'
+                )}
+              </Badge>
             </div>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}

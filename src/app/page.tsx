@@ -14,9 +14,11 @@ export default async function Home() {
 
   return (
     <div className="flex h-full items-center justify-center overflow-hidden bg-background">
-      <div className="absolute right-4 top-4">
-        <UserDropdown />
-      </div>
+      {session && (
+        <div className="absolute right-4 top-4">
+          <UserDropdown user={session.user} />
+        </div>
+      )}
       {/* Decorative gradient burst - top left */}
 
       {/* Background SVG */}
