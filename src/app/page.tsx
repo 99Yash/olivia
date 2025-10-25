@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { buttonVariants } from '~/components/ui/button';
 import { HandOfGod } from '~/components/ui/icons';
+import { siteConfig } from '~/lib/site';
 import { cn } from '~/lib/utils';
 
 export default function Home() {
@@ -34,16 +35,16 @@ export default function Home() {
         </div>
       </div>
 
-      <main className="relative z-10 flex w-full max-w-4xl flex-col items-center justify-center px-6 py-16 text-center">
-        <div className="mb-12">
+      <main className="relative z-10 flex w-full max-w-4xl flex-col items-center justify-center px-6 py-8 text-center">
+        <div className="mb-8">
           <h1
             className="mb-6 text-foreground text-6xl font-bold tracking-tighter sm:text-7xl lg:text-8xl"
             style={{ textWrap: 'balance', letterSpacing: '-0.04em' }}
           >
-            Olivia
+            {siteConfig.name}
           </h1>
           <p
-            className="text-xl text-muted-foreground sm:text-2xl lg:text-3xl"
+            className="text-xl text-muted-foreground tracking-tight sm:text-2xl lg:text-3xl"
             style={{ textWrap: 'balance' }}
           >
             The most{' '}
@@ -64,7 +65,7 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="mb-12 max-w-2xl">
+        <div className="mb-8 max-w-2xl">
           <p
             className="text-lg leading-relaxed text-muted-foreground"
             style={{ textWrap: 'pretty' }}
@@ -73,8 +74,8 @@ export default function Home() {
             <span className="font-semibold text-foreground">
               AI-powered resume building
             </span>
-            . Create professional, ATS-optimized resumes that stand out to
-            employers and land you your dream job.
+            . Create professional, ATS-optimized resumes that stand out and
+            actually get you hired.
           </p>
         </div>
 
