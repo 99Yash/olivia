@@ -77,7 +77,7 @@ export function EmailSignIn({
           email,
           password,
           rememberMe: true,
-          callbackURL: '/',
+          callbackURL: '/dashboard',
         });
 
         if (error) {
@@ -111,7 +111,7 @@ export function EmailSignIn({
           email,
           password,
           image: `https://avatar.vercel.sh/${encodeURIComponent(name)}`, // Generate avatar from name
-          callbackURL: '/',
+          callbackURL: '/dashboard',
         });
 
         if (error) {
@@ -124,16 +124,13 @@ export function EmailSignIn({
         if (typeof window !== 'undefined') {
           setLocalStorageItem('LAST_AUTH_METHOD', 'EMAIL');
         }
-
-        router.push('/');
-        toast.success('Account created successfully!');
       } catch (error) {
         toast.error(getErrorMessage(error));
       } finally {
         setIsLoading(false);
       }
     },
-    [router]
+    []
   );
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
