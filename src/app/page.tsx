@@ -38,13 +38,13 @@ export default function Home() {
       <main className="relative z-10 flex w-full max-w-4xl flex-col items-center justify-center px-6 py-8 text-center">
         <div className="mb-8">
           <h1
-            className="mb-6 text-foreground text-6xl font-bold tracking-tighter sm:text-7xl lg:text-8xl"
+            className="mb-6 text-foreground text-6xl font-bold tracking-tight sm:text-7xl lg:text-8xl"
             style={{ textWrap: 'balance', letterSpacing: '-0.04em' }}
           >
             {siteConfig.name}
           </h1>
           <p
-            className="text-xl text-muted-foreground tracking-tight sm:text-2xl lg:text-3xl"
+            className="text-xl text-muted-foreground tracking-tighter sm:text-2xl lg:text-3xl"
             style={{ textWrap: 'balance' }}
           >
             The most{' '}
