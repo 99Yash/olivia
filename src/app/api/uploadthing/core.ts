@@ -2,6 +2,7 @@ import { headers } from 'next/headers';
 import { createUploadthing, type FileRouter } from 'uploadthing/next';
 import { UploadThingError } from 'uploadthing/server';
 import { auth } from '~/lib/auth/server';
+import { FILE_UPLOAD } from '~/lib/constants';
 
 const f = createUploadthing();
 
@@ -24,8 +25,8 @@ export const oliviaFileRouter = {
        * For full list of options and defaults, see the File Route API reference
        * @see https://docs.uploadthing.com/file-routes#route-config
        */
-      maxFileSize: '4MB',
-      maxFileCount: 1,
+      maxFileSize: FILE_UPLOAD.SIZE_LIMITS_STRING.IMAGE,
+      maxFileCount: FILE_UPLOAD.COUNT_LIMITS.IMAGE,
     },
   })
     // Set permissions and file types for this FileRoute
@@ -52,16 +53,16 @@ export const oliviaFileRouter = {
   // Resume uploader for PDF, DOC, DOCX, TXT files
   resumeUploader: f({
     pdf: {
-      maxFileSize: '8MB',
-      maxFileCount: 1,
+      maxFileSize: FILE_UPLOAD.SIZE_LIMITS_STRING.RESUME,
+      maxFileCount: FILE_UPLOAD.COUNT_LIMITS.RESUME,
     },
     'application/msword': {
-      maxFileSize: '8MB',
-      maxFileCount: 1,
+      maxFileSize: FILE_UPLOAD.SIZE_LIMITS_STRING.RESUME,
+      maxFileCount: FILE_UPLOAD.COUNT_LIMITS.RESUME,
     },
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document': {
-      maxFileSize: '8MB',
-      maxFileCount: 1,
+      maxFileSize: FILE_UPLOAD.SIZE_LIMITS_STRING.RESUME,
+      maxFileCount: FILE_UPLOAD.COUNT_LIMITS.RESUME,
     },
   })
     // Set permissions and file types for this FileRoute

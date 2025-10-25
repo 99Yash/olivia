@@ -28,6 +28,7 @@ import {
   FormMessage,
 } from '~/components/ui/form';
 import { Input } from '~/components/ui/input';
+import { FILE_UPLOAD, formatFileSize } from '~/lib/constants';
 import { useUploadFiles } from '~/lib/uploadthing';
 
 export const resumeUploadSchema = z.object({
@@ -45,7 +46,9 @@ interface ResumeUploadFormProps {
 
 export function ResumeUploadForm({ className }: ResumeUploadFormProps) {
   const [files, setFiles] = React.useState<File[]>([]);
-  const { uploadFiles, isUploading } = useUploadFiles('resumeUploader');
+  const { uploadFiles, isUploading } = useUploadFiles(
+    FILE_UPLOAD.ENDPOINTS.RESUME
+  );
 
   const form = useForm<ResumeUploadData>({
     resolver: zodResolver(resumeUploadSchema),
@@ -139,9 +142,9 @@ export function ResumeUploadForm({ className }: ResumeUploadFormProps) {
             </label>
             <div className="mt-2">
               <FileUpload
-                accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                maxFiles={1}
-                maxSize={10 * 1024 * 1024}
+                accept={FILE_UPLOAD.TYPES.RESUME.ACCEPT}
+                maxFiles={FILE_UPLOAD.COUNT_LIMITS.RESUME}
+                maxSize={FILE_UPLOAD.SIZE_LIMITS.RESUME}
                 className="w-full max-w-md"
                 onAccept={onAccept}
                 onFileReject={onFileReject}
@@ -155,7 +158,8 @@ export function ResumeUploadForm({ className }: ResumeUploadFormProps) {
                     </div>
                     <p className="font-medium text-sm">Upload your resume</p>
                     <p className="text-muted-foreground text-xs">
-                      PDF, DOC, or DOCX files up to 10MB
+                      PDF, DOC, or DOCX files up to{' '}
+                      {formatFileSize(FILE_UPLOAD.SIZE_LIMITS.RESUME)}
                     </p>
                   </div>
                   <FileUploadTrigger asChild>
