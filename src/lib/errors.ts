@@ -1,4 +1,5 @@
 import {
+  AISDKError,
   APICallError,
   DownloadError,
   EmptyResponseBodyError,
@@ -194,8 +195,8 @@ const AI_SDK_ERROR_HANDLERS = [
     UnsupportedFunctionalityError,
     'This AI functionality is not supported by the chosen model.',
   ],
-] as const satisfies ReadonlyArray<
-  [{ isInstance: (err: unknown) => boolean }, string]
+] satisfies ReadonlyArray<
+  [{ isInstance: (err: AISDKError) => boolean }, string]
 >;
 
 /**
