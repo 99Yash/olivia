@@ -1,4 +1,6 @@
 import { headers } from 'next/headers';
+import { PDFParse } from 'pdf-parse';
+import 'pdf-parse/worker'; // Import worker before pdf-parse for Next.js compatibility
 import { createUploadthing, type FileRouter } from 'uploadthing/next';
 import { UploadThingError } from 'uploadthing/server';
 import { auth } from '~/lib/auth/server';
@@ -46,30 +48,40 @@ export const oliviaFileRouter = {
       return { userId: user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      const { valid } = await verifyResume(file.ufsUrl);
+      const parser = new PDFParse({ url: file.ufsUrl });
 
-      if (!valid) {
-        await utapi.deleteFiles([file.ufsUrl]);
-        throw new AppError({
-          code: 'BAD_REQUEST',
-          message:
-            'This document does not seem to be a resume. Please upload a valid resume file.',
+      try {
+        const data = await parser.getText();
+
+        const { valid } = await verifyResume(data.text);
+
+        console.log('>>>>>>>>>>>>>valid', valid);
+
+        if (!valid) {
+          await utapi.deleteFiles([file.ufsUrl]);
+          throw new AppError({
+            code: 'BAD_REQUEST',
+            message:
+              'This document does not seem to be a resume. Please upload a valid resume file.',
+          });
+        }
+
+        const { object: analysis } = await analyzeResume(data.text);
+
+        await addResume({
+          name: file.name,
+          url: file.ufsUrl,
+          status: 'complete',
+          analysis,
+          userId: metadata.userId,
+          jobId: null, // null for the user's base resume
         });
+
+        // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
+        return { uploadedBy: metadata.userId };
+      } finally {
+        await parser.destroy(); // Clean up resources
       }
-
-      const { object: analysis } = await analyzeResume(file.ufsUrl);
-
-      await addResume({
-        name: file.name,
-        url: file.ufsUrl,
-        status: 'complete',
-        analysis,
-        userId: metadata.userId,
-        jobId: null, // null for the user's base resume
-      });
-
-      // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
-      return { uploadedBy: metadata.userId };
     }),
 } satisfies FileRouter;
 

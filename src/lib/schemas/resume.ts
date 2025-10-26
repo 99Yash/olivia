@@ -3,7 +3,7 @@ import z from 'zod';
 export const resume_parse_object = z.object({
   full_name: z.string().nullable().describe('Full name of the user'),
   phone_number: z.string().nullable().describe('Contact number if present'),
-  website_url: z.url().nullable().describe('Website of the user if present'),
+  website_url: z.string().nullable().describe('Website of the user if present'),
   email: z.email().nullable().describe('Email of the user'),
   location: z.string().nullable().describe('Location of the user'),
   summary: z
@@ -213,38 +213,6 @@ export const resume_parse_object = z.object({
     .nullable()
     .describe('List of patents'),
 
-  references: z
-    .array(
-      z.object({
-        name: z
-          .string()
-          .nullable()
-          .describe('Full name of the reference person'),
-        designation: z
-          .string()
-          .nullable()
-          .describe(
-            'Job title or position of the reference (e.g., "Senior Software Engineer", "Product Manager")'
-          ),
-        company: z
-          .string()
-          .nullable()
-          .describe('Company where the reference works, or notable work.'),
-        email: z.string().nullable().describe('Email address of the reference'),
-        phone: z.string().nullable().describe('Phone number of the reference'),
-        testimonial: z
-          .string()
-          .nullable()
-          .describe(
-            'What the reference says about the person - their recommendation or testimonial'
-          ),
-      })
-    )
-    .nullable()
-    .describe(
-      "Professional references - people who can vouch for the candidate's skills and character"
-    ),
-
   languages: z
     .array(
       z.object({
@@ -271,5 +239,4 @@ export type SectionKey =
   | 'certifications'
   | 'awards'
   | 'patents'
-  | 'languages'
-  | 'references';
+  | 'languages';
