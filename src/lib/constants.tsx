@@ -44,19 +44,25 @@ export const getProviderById = (
   return OAUTH_PROVIDERS[id];
 };
 
+// File Upload Constants - Single source of truth for file sizes in MB
+const FILE_SIZE_MB = {
+  IMAGE: 4,
+  RESUME: 4,
+} as const;
+
 // File Upload Constants
 export const FILE_UPLOAD = {
-  // File size limits (in bytes)
+  // File size limits (in bytes) - derived from MB values
   SIZE_LIMITS: {
-    IMAGE: 4 * 1024 * 1024, // 4MB
-    RESUME: 8 * 1024 * 1024, // 8MB
+    IMAGE: FILE_SIZE_MB.IMAGE * 1024 * 1024,
+    RESUME: FILE_SIZE_MB.RESUME * 1024 * 1024,
   } as const,
 
-  // File size limits (as strings for UploadThing)
+  // File size limits (as strings for UploadThing) - derived from MB values
   SIZE_LIMITS_STRING: {
-    IMAGE: '4MB' as const,
-    RESUME: '8MB' as const,
-  },
+    IMAGE: `${FILE_SIZE_MB.IMAGE}MB` as const,
+    RESUME: `${FILE_SIZE_MB.RESUME}MB` as const,
+  } as const,
 
   // File count limits
   COUNT_LIMITS: {

@@ -1,6 +1,6 @@
 import { relations } from 'drizzle-orm';
 import { pgEnum, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core';
-import { lifecycle_dates } from './helpers';
+import { createId, lifecycle_dates } from './helpers';
 import { resume } from './resume';
 
 export const jobStatusEnum = pgEnum('job_status', [
@@ -11,7 +11,9 @@ export const jobStatusEnum = pgEnum('job_status', [
 ]);
 
 export const job = pgTable('job', {
-  id: text('id').primaryKey(),
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => createId()),
   url: varchar('url').notNull().unique(),
   status: jobStatusEnum('status').default('pending').notNull(),
   content: text('content'),

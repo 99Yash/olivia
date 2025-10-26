@@ -2,7 +2,7 @@ import { relations } from 'drizzle-orm';
 import { jsonb, pgEnum, pgTable, text, varchar } from 'drizzle-orm/pg-core';
 import { ValidatedResumeData } from '~/lib/schemas/resume';
 import { user } from './auth';
-import { lifecycle_dates } from './helpers';
+import { createId, lifecycle_dates } from './helpers';
 import { job } from './job';
 
 export const resumeStatusEnum = pgEnum('resume_status', [
@@ -12,10 +12,12 @@ export const resumeStatusEnum = pgEnum('resume_status', [
 ]);
 
 export const resume = pgTable('resume', {
-  id: text('id').primaryKey(),
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => createId()),
   name: varchar('name').notNull(),
   url: varchar('url').notNull(),
-  jobId: text('job_id').references(() => job.id, { onDelete: 'cascade' }),
+  jobId: text('job_id').references(() => job.id, { onDelete: 'cascade' }), // null for the user's base resume
   status: resumeStatusEnum('status').default('pending').notNull(),
   analysis: jsonb('analysis').$type<ValidatedResumeData>().notNull(),
   userId: text('user_id')
@@ -34,3 +36,6 @@ export const resumeRelations = relations(resume, ({ one }) => ({
     references: [user.id],
   }),
 }));
+
+export type Resume = typeof resume.$inferSelect;
+export type NewResume = typeof resume.$inferInsert;
