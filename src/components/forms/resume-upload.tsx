@@ -28,8 +28,8 @@ import {
   FormMessage,
 } from '~/components/ui/form';
 import { Input } from '~/components/ui/input';
+import { useUploadFiles } from '~/hooks/use-uploadthing';
 import { FILE_UPLOAD, formatFileSize } from '~/lib/constants';
-import { useUploadFiles } from '~/lib/uploadthing';
 
 export const resumeUploadSchema = z.object({
   title: z

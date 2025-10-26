@@ -7,6 +7,7 @@ import { FILE_UPLOAD } from '~/lib/constants';
 import { AppError } from '~/lib/errors';
 import { analyzeResume, verifyResume } from '~/lib/services/ai.service';
 import { addResume } from '~/lib/services/resume.service';
+import { utapi } from '~/lib/uploadthing';
 
 const f = createUploadthing();
 
@@ -37,9 +38,7 @@ export const oliviaFileRouter = {
       maxFileCount: FILE_UPLOAD.COUNT_LIMITS.RESUME,
     },
   })
-    // Set permissions and file types for this FileRoute
     .middleware(async () => {
-      // This code runs on your server before upload
       const user = await authMiddleware();
 
       if (!user)
@@ -48,23 +47,20 @@ export const oliviaFileRouter = {
       return { userId: user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      // This code RUNS ON YOUR SERVER after upload
-      console.log('Resume upload complete for userId:', metadata.userId);
-      console.log('file url', file.ufsUrl);
-
       const { valid } = await verifyResume(file.ufsUrl);
 
-      if (!valid)
+      if (!valid) {
+        await utapi.deleteFiles([file.ufsUrl]);
         throw new AppError({
-          code: 'NOT_IMPLEMENTED',
-          message: 'Invalid resume',
+          code: 'BAD_REQUEST',
+          message:
+            'This document does not seem to be a resume. Please upload a valid resume file.',
         });
+      }
 
       const { object: analysis } = await analyzeResume(file.ufsUrl);
 
-      console.log('analysis', analysis);
-
-      const resume = await addResume({
+      await addResume({
         name: `${analysis.full_name} resume ${format(
           new Date(),
           'dd/MM/yyyy'
@@ -75,8 +71,6 @@ export const oliviaFileRouter = {
         userId: metadata.userId,
         jobId: null, // null for the user's base resume
       });
-
-      console.log('resume added', resume.id);
 
       // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
       return { uploadedBy: metadata.userId };
