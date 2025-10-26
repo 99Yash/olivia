@@ -101,8 +101,6 @@ export function ResumeUploadForm({ className }: ResumeUploadFormProps = {}) {
       form.reset();
       setFiles([]);
     } catch (error) {
-      console.error('Upload error:', error);
-
       if (error instanceof Error) {
         toast.error(error.message);
       } else {

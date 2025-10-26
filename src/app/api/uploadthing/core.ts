@@ -55,10 +55,8 @@ export const oliviaFileRouter = {
 
         const { valid } = await verifyResume(data.text);
 
-        console.log('>>>>>>>>>>>>>valid', valid);
-
         if (!valid) {
-          await utapi.deleteFiles([file.ufsUrl]);
+          await utapi.deleteFiles([file.key]);
           throw new AppError({
             code: 'BAD_REQUEST',
             message:

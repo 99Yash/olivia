@@ -10,33 +10,29 @@ type UploadRoute = keyof OliviaFileRouter;
 
 export function useUploadFiles<T extends UploadRoute>(route: T) {
   const { startUpload, isUploading } = useUploadThing(route, {
-    onClientUploadComplete: (res: ClientUploadedFileData<unknown>[]) => {
-      console.log('Resume upload completed:', res);
+    onClientUploadComplete: () => {
+      // Upload completed
     },
-    onUploadError: (error: Error) => {
-      console.error('Resume upload error:', error);
+    onUploadError: () => {
+      // Upload error
     },
-    onUploadBegin: (fileName: string) => {
-      console.log('Resume upload started:', fileName);
+    onUploadBegin: () => {
+      // Upload started
     },
   });
 
   const uploadFiles = async (files: File[]) => {
-    try {
-      // @ts-expect-error - UploadThing type inference issue with mixed shorthand and MIME types
-      const res = await startUpload(files);
+    // @ts-expect-error - UploadThing type inference issue with mixed shorthand and MIME types
+    const res = await startUpload(files);
 
-      if (!res) {
-        throw new Error('Upload failed');
-      }
-
-      return res.map((file: ClientUploadedFileData<unknown>) => ({
-        name: file.name,
-        url: file.ufsUrl,
-      }));
-    } catch (error) {
-      throw error;
+    if (!res) {
+      throw new Error('Upload failed');
     }
+
+    return res.map((file: ClientUploadedFileData<unknown>) => ({
+      name: file.name,
+      url: file.ufsUrl,
+    }));
   };
 
   return {
