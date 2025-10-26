@@ -5,7 +5,7 @@ import { resume_parse_object } from '../schemas/resume';
 
 export const verifyResume = async (resumeUrl: string) => {
   const { object, usage } = await generateObject({
-    model: openai('gpt-4o-mini'),
+    model: openai('gpt-4o'),
     schema: z.object({
       valid: z.boolean().describe('Whether the resume is valid'),
     }),
@@ -17,7 +17,7 @@ export const verifyResume = async (resumeUrl: string) => {
 
 export const analyzeResume = async (resumeUrl: string) => {
   const { object, usage } = await generateObject({
-    model: openai('gpt-4o-mini'),
+    model: openai('gpt-4o'),
     schema: resume_parse_object,
     prompt: `Analyze the resume at ${resumeUrl} and return the data.`,
   });

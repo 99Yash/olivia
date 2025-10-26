@@ -1,12 +1,12 @@
-import { format } from 'date-fns';
 import { headers } from 'next/headers';
 import { createUploadthing, type FileRouter } from 'uploadthing/next';
 import { UploadThingError } from 'uploadthing/server';
 import { auth } from '~/lib/auth/server';
 import { FILE_UPLOAD } from '~/lib/constants';
 import { AppError } from '~/lib/errors';
-import { analyzeResume } from '~/lib/services/ai.service';
+import { analyzeResume, verifyResume } from '~/lib/services/ai.service';
 import { addResume } from '~/lib/services/resume.service';
+import { utapi } from '~/lib/uploadthing';
 
 const f = createUploadthing();
 
@@ -46,24 +46,21 @@ export const oliviaFileRouter = {
       return { userId: user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      // const { valid } = await verifyResume(file.ufsUrl);
+      const { valid } = await verifyResume(file.ufsUrl);
 
-      // if (!valid) {
-      //   await utapi.deleteFiles([file.ufsUrl]);
-      //   throw new AppError({
-      //     code: 'BAD_REQUEST',
-      //     message:
-      //       'This document does not seem to be a resume. Please upload a valid resume file.',
-      //   });
-      // }
+      if (!valid) {
+        await utapi.deleteFiles([file.ufsUrl]);
+        throw new AppError({
+          code: 'BAD_REQUEST',
+          message:
+            'This document does not seem to be a resume. Please upload a valid resume file.',
+        });
+      }
 
       const { object: analysis } = await analyzeResume(file.ufsUrl);
 
       await addResume({
-        name: `${analysis.full_name} resume ${format(
-          new Date(),
-          'dd/MM/yyyy'
-        )}`,
+        name: file.name,
         url: file.ufsUrl,
         status: 'complete',
         analysis,
