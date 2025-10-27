@@ -110,7 +110,7 @@ export function ResumeUploadForm({ className }: ResumeUploadFormProps = {}) {
   }, [files, uploadFiles, form]);
 
   return (
-    <div className={className || ''}>
+    <div className={className}>
       <Form {...form}>
         <form className="space-y-8">
           <FormField
