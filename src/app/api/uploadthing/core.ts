@@ -1,6 +1,6 @@
 import { headers } from 'next/headers';
 import { PDFParse } from 'pdf-parse';
-import 'pdf-parse/worker'; // Import worker before pdf-parse for Next.js compatibility
+import 'pdf-parse/worker'; // Ensure worker is imported before any usage of PDFParse for Next.js compatibility
 import { createUploadthing, type FileRouter } from 'uploadthing/next';
 import { UploadThingError } from 'uploadthing/server';
 import { auth } from '~/lib/auth/server';
