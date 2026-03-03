@@ -3,6 +3,7 @@
 import { formatDistanceToNow } from 'date-fns';
 import { BriefcaseIcon, EyeIcon, RotateCwIcon } from 'lucide-react';
 import { useState, useTransition } from 'react';
+import { toast } from 'sonner';
 import { retryJobAction } from './actions';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
@@ -149,7 +150,11 @@ export function JobList({ jobs }: { jobs: Job[] }) {
                     onClick={() => {
                       setRetryingId(job.id);
                       startTransition(async () => {
-                        await retryJobAction(job.id);
+                        const result = await retryJobAction(job.id);
+                        if ('error' in result) {
+                          toast.error(result.error);
+                        }
+                        setRetryingId(null);
                       });
                     }}
                   >

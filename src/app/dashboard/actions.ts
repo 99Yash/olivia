@@ -1,6 +1,6 @@
 'use server';
 
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { headers } from 'next/headers';
 import { after } from 'next/server';
 import { db } from '~/db';
@@ -45,27 +45,24 @@ export async function retryJobAction(jobId: string) {
     return { error: 'Unauthorized' };
   }
 
-  const [existing] = await db
-    .select()
-    .from(job)
-    .where(eq(job.id, jobId));
-
-  if (!existing || existing.userId !== session.user.id) {
-    return { error: 'Job not found' };
-  }
-
-  if (existing.status !== 'error' && existing.status !== 'invalid') {
-    return { error: 'Only failed jobs can be retried' };
-  }
-
-  // Reset job status
-  await db
+  const [updated] = await db
     .update(job)
     .set({ status: 'pending', invalidReason: null })
-    .where(eq(job.id, jobId));
+    .where(
+      and(
+        eq(job.id, jobId),
+        eq(job.userId, session.user.id),
+        inArray(job.status, ['error', 'invalid'])
+      )
+    )
+    .returning();
+
+  if (!updated) {
+    return { error: 'Job not found or cannot be retried' };
+  }
 
   after(async () => {
-    await runTailoringWorkflow(jobId, existing.url, existing.userId);
+    await runTailoringWorkflow(jobId, updated.url, updated.userId);
   });
 
   return { success: true };

@@ -7,7 +7,7 @@ import {
   View,
   StyleSheet,
 } from '@react-pdf/renderer';
-import { ValidatedResumeData } from '~/lib/schemas/resume';
+import { ValidatedResumeData, normalizeSkills } from '~/lib/schemas/resume';
 
 const styles = StyleSheet.create({
   page: {
@@ -199,7 +199,7 @@ export function ResumeDocument({ data }: { data: ValidatedResumeData }) {
         {data.skills && data.skills.length > 0 && (
           <>
             <Text style={styles.sectionTitle}>Skills</Text>
-            {data.skills.map((cat, i) => (
+            {normalizeSkills(data.skills)?.map((cat, i) => (
               <View key={i} style={styles.skillCategory}>
                 {cat.title && (
                   <Text style={styles.skillCategoryTitle}>

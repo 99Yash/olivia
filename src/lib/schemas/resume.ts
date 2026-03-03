@@ -217,6 +217,19 @@ export const resume_parse_object = z.object({
 
 export type ValidatedResumeData = z.infer<typeof resume_parse_object>;
 
+type SkillCategory = { title: string | null; skills: string[] };
+
+/** Normalize legacy flat string[] skills into categorized format */
+export function normalizeSkills(
+  skills: ValidatedResumeData['skills'] | string[] | null
+): SkillCategory[] | null {
+  if (!skills || skills.length === 0) return skills as SkillCategory[] | null;
+  if (typeof skills[0] === 'string') {
+    return [{ title: null, skills: skills as string[] }];
+  }
+  return skills as SkillCategory[];
+}
+
 export type SectionKey =
   | 'summary'
   | 'highlights'
