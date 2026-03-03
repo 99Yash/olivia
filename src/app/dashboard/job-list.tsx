@@ -1,8 +1,9 @@
 'use client';
 
 import { formatDistanceToNow } from 'date-fns';
-import { BriefcaseIcon, EyeIcon } from 'lucide-react';
-import { useState } from 'react';
+import { BriefcaseIcon, EyeIcon, RotateCwIcon } from 'lucide-react';
+import { useState, useTransition } from 'react';
+import { retryJobAction } from './actions';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import {
@@ -72,6 +73,8 @@ function StatusBadge({ status }: { status: Job['status'] }) {
 
 export function JobList({ jobs }: { jobs: Job[] }) {
   const [previewJobId, setPreviewJobId] = useState<string | null>(null);
+  const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   if (jobs.length === 0) {
     return (
@@ -136,6 +139,24 @@ export function JobList({ jobs }: { jobs: Job[] }) {
                   >
                     <EyeIcon className="size-4" />
                     View
+                  </Button>
+                )}
+                {(job.status === 'error' || job.status === 'invalid') && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={isPending && retryingId === job.id}
+                    onClick={() => {
+                      setRetryingId(job.id);
+                      startTransition(async () => {
+                        await retryJobAction(job.id);
+                      });
+                    }}
+                  >
+                    <RotateCwIcon
+                      className={`size-4 ${isPending && retryingId === job.id ? 'animate-spin' : ''}`}
+                    />
+                    Retry
                   </Button>
                 )}
               </TableCell>

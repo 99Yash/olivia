@@ -2,6 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FileText, Upload, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -45,6 +46,7 @@ interface ResumeUploadFormProps {
 }
 
 export function ResumeUploadForm({ className }: ResumeUploadFormProps = {}) {
+  const router = useRouter();
   const [files, setFiles] = React.useState<File[]>([]);
   const { uploadFiles, isUploading } = useUploadFiles(
     FILE_UPLOAD.ENDPOINTS.RESUME
@@ -80,21 +82,11 @@ export function ResumeUploadForm({ className }: ResumeUploadFormProps = {}) {
       const res = await uploadFiles(files);
 
       toast.success('Resume uploaded successfully!', {
-        description: (
-          <pre className="mt-2 w-80 rounded-md bg-accent/30 p-4 text-accent-foreground">
-            <code>
-              {JSON.stringify(
-                res.map((file) =>
-                  file.name.length > 25
-                    ? `${file.name.slice(0, 25)}...`
-                    : file.name
-                ),
-                null,
-                2
-              )}
-            </code>
-          </pre>
-        ),
+        description: 'Your resume has been analyzed and is ready.',
+        action: {
+          label: 'Go to Dashboard',
+          onClick: () => router.push('/dashboard'),
+        },
       });
 
       // Reset form after successful upload
