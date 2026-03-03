@@ -18,7 +18,7 @@ export async function GET(
   const { jobId } = await params;
   const resume = await getResumeByJobId(jobId);
 
-  if (!resume) {
+  if (!resume || resume.userId !== session.user.id) {
     return NextResponse.json(
       { error: 'Resume not found' },
       { status: 404 }
