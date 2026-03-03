@@ -1,7 +1,11 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  serverExternalPackages: [
+    'pdf-parse',
+    '@napi-rs/canvas',
+    '@mendable/firecrawl-js',
+  ],
 };
 
 export default nextConfig;

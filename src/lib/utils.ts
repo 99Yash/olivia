@@ -19,19 +19,12 @@ export function setLocalStorageItem<K extends LocalStorageKey>(
     const validationResult = schema.safeParse(value);
 
     if (!validationResult.success) {
-      console.error(
-        `[LocalStorageError] Invalid value for key "${key}":`,
-        validationResult.error.issues
-      );
       return;
     }
 
     localStorage.setItem(key, JSON.stringify(validationResult.data));
   } catch (error) {
-    console.error(
-      `[LocalStorageError] Failed to set item for key "${key}":`,
-      error
-    );
+    // Failed to set item
   }
 }
 
@@ -55,7 +48,6 @@ export function getLocalStorageItem<K extends LocalStorageKey>(
   try {
     parsedValue = JSON.parse(serializedValue);
   } catch {
-    console.warn(`[LocalStorageError] Failed to parse value for key "${key}"`);
     return defaultValue !== undefined ? defaultValue : undefined;
   }
 
@@ -63,11 +55,6 @@ export function getLocalStorageItem<K extends LocalStorageKey>(
   if (validationResult.success) {
     return validationResult.data;
   }
-
-  console.warn(
-    `[LocalStorageValidation] Invalid data for key "${key}":`,
-    validationResult.error.issues
-  );
 
   if (defaultValue !== undefined) {
     const defaultResult = schema.safeParse(defaultValue);
@@ -82,9 +69,6 @@ export function removeLocalStorageItem(key: LocalStorageKey): void {
   try {
     localStorage.removeItem(key);
   } catch (error) {
-    console.error(
-      `[LocalStorageError] Failed to remove item for key "${key}":`,
-      error
-    );
+    // Failed to remove item
   }
 }

@@ -48,7 +48,7 @@ const OAuthButton: React.FC<OAuthButtonProps> = ({
     try {
       await authClient.signIn.social({
         provider: providerId,
-        callbackURL: '/',
+        callbackURL: '/dashboard',
       });
 
       // Persist last used auth method
