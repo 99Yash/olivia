@@ -73,7 +73,18 @@ export default async function Home() {
         </div>
 
         {session ? (
-          <Link href="/upload">Upload resume</Link>
+          <Link
+            className={cn(
+              buttonVariants({ variant: 'default', size: 'lg' }),
+              'group px-8 py-4 text-lg font-semibold tracking-tight shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30'
+            )}
+            href="/dashboard"
+          >
+            Dashboard
+            <span className="ml-2 inline-block transition-transform group-hover:translate-x-1">
+              →
+            </span>
+          </Link>
         ) : (
           <Link
             className={cn(

@@ -1,3 +1,4 @@
+import { and, desc, eq, isNull } from 'drizzle-orm';
 import { db } from '~/db';
 import { NewResume, resume as resumeSchema } from '~/db/schemas';
 
@@ -8,4 +9,30 @@ export const addResume = async (resume: NewResume) => {
     .returning();
 
   return newResume;
+};
+
+export const getBaseResume = async (userId: string) => {
+  const [base] = await db
+    .select()
+    .from(resumeSchema)
+    .where(
+      and(
+        eq(resumeSchema.userId, userId),
+        isNull(resumeSchema.jobId),
+        eq(resumeSchema.status, 'complete')
+      )
+    )
+    .orderBy(desc(resumeSchema.createdAt))
+    .limit(1);
+
+  return base ?? null;
+};
+
+export const getResumeByJobId = async (jobId: string) => {
+  const [result] = await db
+    .select()
+    .from(resumeSchema)
+    .where(eq(resumeSchema.jobId, jobId));
+
+  return result ?? null;
 };
