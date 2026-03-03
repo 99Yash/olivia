@@ -4,7 +4,7 @@ export const resume_parse_object = z.object({
   full_name: z.string().nullable().describe('Full name of the user'),
   phone_number: z.string().nullable().describe('Contact number if present'),
   website_url: z.string().nullable().describe('Website of the user if present'),
-  email: z.string().nullable().describe('Email of the user'),
+  email: z.string().email().nullable().describe('Email of the user'),
   location: z.string().nullable().describe('Location of the user'),
   summary: z
     .string()
