@@ -7,7 +7,7 @@ import {
   View,
   StyleSheet,
 } from '@react-pdf/renderer';
-import { ValidatedResumeData } from '~/lib/schemas/resume';
+import { ValidatedResumeData, normalizeSkills } from '~/lib/schemas/resume';
 
 const styles = StyleSheet.create({
   page: {
@@ -196,42 +196,25 @@ export function ResumeDocument({ data }: { data: ValidatedResumeData }) {
         )}
 
         {/* Skills */}
-        {data.skills && (
+        {data.skills && data.skills.length > 0 && (
           <>
             <Text style={styles.sectionTitle}>Skills</Text>
-            {Array.isArray(data.skills) &&
-              data.skills.length > 0 &&
-              (typeof data.skills[0] === 'string' ? (
+            {normalizeSkills(data.skills)?.map((cat, i) => (
+              <View key={i} style={styles.skillCategory}>
+                {cat.title && (
+                  <Text style={styles.skillCategoryTitle}>
+                    {cat.title}
+                  </Text>
+                )}
                 <View style={styles.skillRow}>
-                  {(data.skills as string[]).map((skill, i) => (
-                    <Text key={i} style={styles.skillChip}>
+                  {cat.skills?.map((skill, j) => (
+                    <Text key={j} style={styles.skillChip}>
                       {skill}
                     </Text>
                   ))}
                 </View>
-              ) : (
-                (
-                  data.skills as {
-                    title: string | null;
-                    skills: string[] | null;
-                  }[]
-                ).map((cat, i) => (
-                  <View key={i} style={styles.skillCategory}>
-                    {cat.title && (
-                      <Text style={styles.skillCategoryTitle}>
-                        {cat.title}
-                      </Text>
-                    )}
-                    <View style={styles.skillRow}>
-                      {cat.skills?.map((skill, j) => (
-                        <Text key={j} style={styles.skillChip}>
-                          {skill}
-                        </Text>
-                      ))}
-                    </View>
-                  </View>
-                ))
-              ))}
+              </View>
+            ))}
           </>
         )}
 

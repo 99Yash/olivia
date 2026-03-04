@@ -1,3 +1,4 @@
+import { getErrorMessage } from '../errors';
 import { tailorResume, verifyJobDescription } from './ai.service';
 import { updateJobStatus } from './job.service';
 import { addResume, getBaseResume } from './resume.service';
@@ -53,8 +54,7 @@ export async function runTailoringWorkflow(
     // 7. Complete
     await updateJobStatus(jobId, 'complete');
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Unknown error occurred';
+    const message = getErrorMessage(error);
     await updateJobStatus(jobId, 'error', { invalidReason: message });
   }
 }

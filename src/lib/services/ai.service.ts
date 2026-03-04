@@ -1,15 +1,17 @@
-import { generateObject } from 'ai';
+import { generateText, Output } from 'ai';
 import { z } from 'zod';
 import { openai } from '../ai';
 import { resume_parse_object, ValidatedResumeData } from '../schemas/resume';
 
 export const verifyResume = async (resumeText: string) => {
-  const { object, usage } = await generateObject({
+  const { output, usage } = await generateText({
     model: openai('gpt-4o-mini'),
-    schema: z.object({
-      valid: z
-        .boolean()
-        .describe('Whether the resume resembles a valid resume'),
+    output: Output.object({
+      schema: z.object({
+        valid: z
+          .boolean()
+          .describe('Whether the resume resembles a valid resume'),
+      }),
     }),
     messages: [
       {
@@ -23,13 +25,15 @@ export const verifyResume = async (resumeText: string) => {
     ],
   });
 
-  return { valid: object.valid, usage };
+  return { valid: output!.valid, usage };
 };
 
 export const analyzeResume = async (resumeText: string) => {
-  const { object, usage } = await generateObject({
+  const { output, usage } = await generateText({
     model: openai('gpt-4o-mini'),
-    schema: resume_parse_object,
+    output: Output.object({
+      schema: resume_parse_object,
+    }),
     messages: [
       {
         role: 'system',
@@ -43,23 +47,25 @@ export const analyzeResume = async (resumeText: string) => {
     ],
   });
 
-  return { object, usage };
+  return { object: output!, usage };
 };
 
 export const verifyJobDescription = async (pageContent: string) => {
-  const { object } = await generateObject({
+  const { output } = await generateText({
     model: openai('gpt-4o-mini'),
-    schema: z.object({
-      valid: z
-        .boolean()
-        .describe(
-          'Whether this page content contains a legitimate job posting / job description'
-        ),
-      reason: z
-        .string()
-        .describe(
-          'Brief reason why this is or is not a valid job posting'
-        ),
+    output: Output.object({
+      schema: z.object({
+        valid: z
+          .boolean()
+          .describe(
+            'Whether this page content contains a legitimate job posting / job description'
+          ),
+        reason: z
+          .string()
+          .describe(
+            'Brief reason why this is or is not a valid job posting'
+          ),
+      }),
     }),
     messages: [
       {
@@ -74,16 +80,18 @@ export const verifyJobDescription = async (pageContent: string) => {
     ],
   });
 
-  return { valid: object.valid, reason: object.reason };
+  return { valid: output!.valid, reason: output!.reason };
 };
 
 export const tailorResume = async (
   baseResume: ValidatedResumeData,
   jobDescription: string
 ) => {
-  const { object } = await generateObject({
+  const { output } = await generateText({
     model: openai('gpt-4o-mini'),
-    schema: resume_parse_object,
+    output: Output.object({
+      schema: resume_parse_object,
+    }),
     messages: [
       {
         role: 'system',
@@ -109,5 +117,5 @@ ${jobDescription}`,
     ],
   });
 
-  return object;
+  return output!;
 };

@@ -51,7 +51,9 @@ export function BaseResumeCard({
           <p className="text-sm font-medium">{baseResume.name}</p>
           <p className="text-xs text-muted-foreground">
             Uploaded{' '}
-            {new Date(baseResume.createdAt).toLocaleDateString()}
+            {new Date(baseResume.createdAt).toLocaleDateString('en-US', {
+              timeZone: 'UTC',
+            })}
           </p>
         </div>
       </CardContent>

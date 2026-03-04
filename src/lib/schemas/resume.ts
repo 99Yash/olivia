@@ -4,7 +4,7 @@ export const resume_parse_object = z.object({
   full_name: z.string().nullable().describe('Full name of the user'),
   phone_number: z.string().nullable().describe('Contact number if present'),
   website_url: z.string().nullable().describe('Website of the user if present'),
-  email: z.email().nullable().describe('Email of the user'),
+  email: z.string().nullable().describe('Email of the user'),
   location: z.string().nullable().describe('Location of the user'),
   summary: z
     .string()
@@ -15,34 +15,22 @@ export const resume_parse_object = z.object({
     .nullable()
     .describe('Highlights or key achievements section in the resume as string'),
   skills: z
-    .union([
-      // Option 1: Flat array of strings
-      z
-        .array(z.string().describe('A skill mentioned in the resume'))
-        .describe('Flat array of skills extracted from the resume'),
-      // Option 2: Array of category objects
-      z
-        .array(
-          z.object({
-            title: z
-              .string()
-              .nullable()
-              .describe(
-                'Title of the skill sub-category (e.g., Programming Languages, Frameworks)'
-              ),
-            skills: z
-              .array(z.string().describe('A skill within this category'))
-              .nullable()
-              .describe('Array of skills under this category'),
-          })
-        )
-        .describe(
-          'Array of skill categories, each with an optional title and a list of skills'
-        ),
-    ])
+    .array(
+      z.object({
+        title: z
+          .string()
+          .nullable()
+          .describe(
+            'Title of the skill sub-category (e.g., Programming Languages, Frameworks). Use null if uncategorized.',
+          ),
+        skills: z
+          .array(z.string().describe('A skill within this category'))
+          .describe('Array of skills under this category'),
+      }),
+    )
     .nullable()
     .describe(
-      'Skills section: either a flat list of skills (string[]) or a list of categories ({title?: string, skills: string[]}[]). Strictly should not be a mix of both.'
+      'Skills grouped by category. If the resume lists skills without categories, use a single entry with title: null.',
     ),
 
   education: z
@@ -69,7 +57,7 @@ export const resume_parse_object = z.object({
             year: z.number().nullable().describe('End year of the education'),
           })
           .nullable(),
-      })
+      }),
     )
     .nullable()
     .describe('List of education background'),
@@ -114,9 +102,9 @@ export const resume_parse_object = z.object({
                   .describe('End year of the position'),
               })
               .nullable(),
-          })
+          }),
         ),
-      })
+      }),
     )
     .nullable()
     .describe('List of work experiences'),
@@ -142,7 +130,7 @@ export const resume_parse_object = z.object({
               .describe('Issue year of the certification'),
           })
           .nullable(),
-      })
+      }),
     )
     .nullable()
     .describe('List of certifications'),
@@ -167,7 +155,7 @@ export const resume_parse_object = z.object({
             year: z.number().nullable().describe('End year of the project'),
           })
           .nullable(),
-      })
+      }),
     )
     .nullable()
     .describe('List of projects'),
@@ -187,7 +175,7 @@ export const resume_parse_object = z.object({
             year: z.number().nullable().describe('Issue year of the award'),
           })
           .nullable(),
-      })
+      }),
     )
     .nullable()
     .describe('List of awards'),
@@ -208,7 +196,7 @@ export const resume_parse_object = z.object({
             year: z.number().nullable().describe('Issue year of the patent'),
           })
           .nullable(),
-      })
+      }),
     )
     .nullable()
     .describe('List of patents'),
@@ -221,13 +209,26 @@ export const resume_parse_object = z.object({
           .string()
           .nullable()
           .describe('Proficiency level of the language'),
-      })
+      }),
     )
     .nullable()
     .describe('List of languages spoken by the user'),
 });
 
 export type ValidatedResumeData = z.infer<typeof resume_parse_object>;
+
+type SkillCategory = { title: string | null; skills: string[] };
+
+/** Normalize legacy flat string[] skills into categorized format */
+export function normalizeSkills(
+  skills: ValidatedResumeData['skills'] | string[] | null,
+): SkillCategory[] | null {
+  if (!skills || skills.length === 0) return skills as SkillCategory[] | null;
+  if (typeof skills[0] === 'string') {
+    return [{ title: null, skills: skills as string[] }];
+  }
+  return skills as SkillCategory[];
+}
 
 export type SectionKey =
   | 'summary'

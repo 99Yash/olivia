@@ -1,8 +1,15 @@
 'use client';
 
 import { formatDistanceToNow } from 'date-fns';
-import { BriefcaseIcon, EyeIcon } from 'lucide-react';
-import { useState } from 'react';
+import {
+  BriefcaseIcon,
+  ExternalLinkIcon,
+  EyeIcon,
+  RotateCwIcon,
+} from 'lucide-react';
+import { useState, useTransition } from 'react';
+import { toast } from 'sonner';
+import { retryJobAction } from './actions';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import {
@@ -72,6 +79,8 @@ function StatusBadge({ status }: { status: Job['status'] }) {
 
 export function JobList({ jobs }: { jobs: Job[] }) {
   const [previewJobId, setPreviewJobId] = useState<string | null>(null);
+  const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   if (jobs.length === 0) {
     return (
@@ -103,15 +112,18 @@ export function JobList({ jobs }: { jobs: Job[] }) {
         <TableBody>
           {jobs.map((job) => (
             <TableRow key={job.id}>
-              <TableCell className="max-w-xs">
-                <div className="truncate font-medium">
-                  {job.title ?? job.url}
-                </div>
-                {job.title && (
-                  <div className="truncate text-xs text-muted-foreground">
-                    {job.url}
-                  </div>
-                )}
+              <TableCell className="max-w-sm">
+                <a
+                  href={job.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group/link flex items-center gap-1.5 truncate font-medium hover:underline"
+                >
+                  <span className="truncate">
+                    {job.title ?? new URL(job.url).hostname}
+                  </span>
+                  <ExternalLinkIcon className="size-3 shrink-0 opacity-0 transition-opacity group-hover/link:opacity-60" />
+                </a>
                 {(job.status === 'invalid' || job.status === 'error') &&
                   job.invalidReason && (
                     <div className="mt-1 text-xs text-destructive">
@@ -136,6 +148,28 @@ export function JobList({ jobs }: { jobs: Job[] }) {
                   >
                     <EyeIcon className="size-4" />
                     View
+                  </Button>
+                )}
+                {(job.status === 'error' || job.status === 'invalid') && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={isPending && retryingId === job.id}
+                    onClick={() => {
+                      setRetryingId(job.id);
+                      startTransition(async () => {
+                        const result = await retryJobAction(job.id);
+                        if ('error' in result) {
+                          toast.error(result.error);
+                        }
+                        setRetryingId(null);
+                      });
+                    }}
+                  >
+                    <RotateCwIcon
+                      className={`size-4 ${isPending && retryingId === job.id ? 'animate-spin' : ''}`}
+                    />
+                    Retry
                   </Button>
                 )}
               </TableCell>

@@ -59,7 +59,7 @@ export function PdfPreviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[85vh] flex flex-col">
+      <DialogContent className="sm:max-w-6xl w-[90vw] h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Tailored Resume Preview</DialogTitle>
         </DialogHeader>
