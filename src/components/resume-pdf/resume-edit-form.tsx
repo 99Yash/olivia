@@ -15,12 +15,14 @@ import {
 import { ValidatedResumeData } from '~/lib/schemas/resume';
 import { MonthYearPicker, type MonthYearValue } from './month-year-picker';
 
-function debounce<T extends (...args: any[]) => void>(fn: T, ms: number): T {
+function debounce<T extends (...args: any[]) => void>(fn: T, ms: number): T & { cancel: () => void } {
   let timer: ReturnType<typeof setTimeout>;
-  return ((...args: any[]) => {
+  const debounced = ((...args: any[]) => {
     clearTimeout(timer);
     timer = setTimeout(() => fn(...args), ms);
-  }) as unknown as T;
+  }) as unknown as T & { cancel: () => void };
+  debounced.cancel = () => clearTimeout(timer);
+  return debounced;
 }
 
 function AddButton({ title, onClick }: { title: string; onClick: () => void }) {
@@ -1068,6 +1070,10 @@ export function ResumeEditForm({ resumeData, onChange }: ResumeEditFormProps) {
       }, 300),
     [onChange]
   );
+
+  useEffect(() => {
+    return () => debouncedUpdate.cancel();
+  }, [debouncedUpdate]);
 
   const updateField = useCallback(
     (field: string, value: any, deb = false) => {

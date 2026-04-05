@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { auth } from '~/lib/auth/server';
+import { resume_parse_object } from '~/lib/schemas/resume';
 import {
   getBaseResume,
   updateBaseResumeAnalysis,
@@ -37,17 +38,18 @@ export async function PATCH(request: Request) {
   }
 
   const body = await request.json();
+  const parsed = resume_parse_object.safeParse(body.analysis);
 
-  if (!body.analysis) {
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: 'Missing analysis data' },
+      { error: 'Invalid analysis data' },
       { status: 400 }
     );
   }
 
   const updated = await updateBaseResumeAnalysis(
     session.user.id,
-    body.analysis
+    parsed.data
   );
 
   if (!updated) {

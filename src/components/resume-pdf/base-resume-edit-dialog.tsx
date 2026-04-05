@@ -212,7 +212,6 @@ export function BaseResumeEditDialog({
             className="shrink-0 border-b bg-muted/50 px-6 py-4"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
           >
             <p className="mb-2 text-sm font-medium">
               Paste the job description to optimize your resume for ATS

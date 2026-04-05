@@ -21,9 +21,10 @@ function formatMonth(month: number | null | undefined): string {
 }
 
 function formatDate(
-  d: { month?: number | null; year?: number | null } | null | undefined
+  d: { month?: number | null; year?: number | null } | null | undefined,
+  isEnd = false
 ): string {
-  if (!d?.year) return 'Present';
+  if (!d?.year) return isEnd ? 'Present' : '';
   const m = formatMonth(d.month);
   return m ? `${m} ${d.year}` : `${d.year}`;
 }
@@ -52,7 +53,7 @@ function resumeToText(data: ValidatedResumeData): string {
     lines.push('', '## Experience');
     for (const exp of data.experiences) {
       for (const pos of exp.positions ?? []) {
-        const dateRange = `${formatDate(pos.startsAt)} - ${formatDate(pos.endsAt)}`;
+        const dateRange = `${formatDate(pos.startsAt)} - ${formatDate(pos.endsAt, true)}`;
         lines.push(`### ${pos.title ?? ''} at ${exp.company ?? ''}`);
         lines.push(
           `${dateRange}${pos.location ? ` | ${pos.location}` : ''}`
@@ -73,7 +74,7 @@ function resumeToText(data: ValidatedResumeData): string {
         .join(' in ');
       lines.push(`### ${edu.school ?? ''}`);
       if (degree) lines.push(degree);
-      lines.push(`${formatDate(edu.startsAt)} - ${formatDate(edu.endsAt)}`);
+      lines.push(`${formatDate(edu.startsAt)} - ${formatDate(edu.endsAt, true)}`);
       lines.push('');
     }
   }
@@ -84,7 +85,7 @@ function resumeToText(data: ValidatedResumeData): string {
       lines.push(`### ${proj.name ?? ''}`);
       if (proj.description) lines.push(proj.description);
       lines.push(
-        `${formatDate(proj.startsAt)} - ${formatDate(proj.endsAt)}`
+        `${formatDate(proj.startsAt)} - ${formatDate(proj.endsAt, true)}`
       );
       lines.push('');
     }
