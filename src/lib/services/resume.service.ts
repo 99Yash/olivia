@@ -40,7 +40,7 @@ export const getResumeByJobId = async (jobId: string) => {
 export const updateResumeAnalysis = async (
   jobId: string,
   userId: string,
-  analysis: any
+  analysis: NewResume['analysis']
 ) => {
   const existing = await getResumeByJobId(jobId);
   if (!existing || existing.userId !== userId) return null;
@@ -48,7 +48,9 @@ export const updateResumeAnalysis = async (
   const [updated] = await db
     .update(resumeSchema)
     .set({ analysis })
-    .where(eq(resumeSchema.id, existing.id))
+    .where(
+      and(eq(resumeSchema.id, existing.id), eq(resumeSchema.userId, userId))
+    )
     .returning();
 
   return updated ?? null;

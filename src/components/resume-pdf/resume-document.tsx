@@ -305,9 +305,11 @@ export function ResumeDocument({ data }: { data: ValidatedResumeData }) {
                       </View>
                     </View>
                     {pos.description && (
-                      <View style={{ ...styles.description, marginTop: 1 }}>
+                      <View style={{ marginTop: 1 }}>
                         {pos.description.split('\n\n').map((line, idx) => (
-                          <Text key={idx}>{line}</Text>
+                          <Text key={idx} style={styles.description}>
+                            {line}
+                          </Text>
                         ))}
                       </View>
                     )}
@@ -379,9 +381,11 @@ export function ResumeDocument({ data }: { data: ValidatedResumeData }) {
                   </View>
                 </View>
                 {project.description && (
-                  <View style={styles.description}>
+                  <View>
                     {project.description.split('\n\n').map((line, idx) => (
-                      <Text key={idx}>{line}</Text>
+                      <Text key={idx} style={styles.description}>
+                        {line}
+                      </Text>
                     ))}
                   </View>
                 )}
@@ -436,7 +440,7 @@ export function ResumeDocument({ data }: { data: ValidatedResumeData }) {
                   <View style={{ flex: 1, minWidth: 0, flexShrink: 1 }}>
                     {cert.url ? (
                       <Link
-                        src={cert.url}
+                        src={normalizeUrlForHref(cert.url)}
                         style={{
                           ...styles.itemTitle,
                           color: COLORS.LINK,
@@ -503,9 +507,11 @@ export function ResumeDocument({ data }: { data: ValidatedResumeData }) {
                   )}
                 </View>
                 {award.description && (
-                  <View style={styles.description}>
+                  <View>
                     {award.description.split('\n\n').map((line, idx) => (
-                      <Text key={idx}>{line}</Text>
+                      <Text key={idx} style={styles.description}>
+                        {line}
+                      </Text>
                     ))}
                   </View>
                 )}
@@ -532,7 +538,7 @@ export function ResumeDocument({ data }: { data: ValidatedResumeData }) {
                   <View style={{ flex: 1, minWidth: 0, flexShrink: 1 }}>
                     {patent.url ? (
                       <Link
-                        src={patent.url}
+                        src={normalizeUrlForHref(patent.url)}
                         style={{
                           ...styles.itemTitle,
                           color: COLORS.LINK,
@@ -561,9 +567,11 @@ export function ResumeDocument({ data }: { data: ValidatedResumeData }) {
                   )}
                 </View>
                 {patent.description && (
-                  <View style={styles.description}>
+                  <View>
                     {patent.description.split('\n\n').map((line, idx) => (
-                      <Text key={idx}>{line}</Text>
+                      <Text key={idx} style={styles.description}>
+                        {line}
+                      </Text>
                     ))}
                   </View>
                 )}

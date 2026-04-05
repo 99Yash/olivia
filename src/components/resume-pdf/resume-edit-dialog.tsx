@@ -48,6 +48,8 @@ export function ResumeEditDialog({
       setEditedData(data.analysis);
     } catch {
       setError('Failed to load resume');
+      setOriginalData(null);
+      setEditedData(null);
     } finally {
       setLoading(false);
     }
@@ -163,7 +165,7 @@ export function ResumeEditDialog({
             </div>
           )}
 
-          {editedData && !loading && (
+          {editedData && !loading && !error && (
             <>
               {/* Left: Edit form */}
               <motion.div
