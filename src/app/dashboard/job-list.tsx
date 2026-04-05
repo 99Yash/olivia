@@ -5,6 +5,7 @@ import {
   BriefcaseIcon,
   ExternalLinkIcon,
   EyeIcon,
+  PencilIcon,
   RotateCwIcon,
 } from 'lucide-react';
 import { useState, useTransition } from 'react';
@@ -30,6 +31,7 @@ import {
 } from '~/components/ui/table';
 import { Job } from '~/db/schemas/job';
 import { PdfPreviewDialog } from '~/components/resume-pdf/pdf-preview-dialog';
+import { ResumeEditDialog } from '~/components/resume-pdf/resume-edit-dialog';
 
 const STATUS_CONFIG: Record<
   Job['status'],
@@ -79,6 +81,7 @@ function StatusBadge({ status }: { status: Job['status'] }) {
 
 export function JobList({ jobs }: { jobs: Job[] }) {
   const [previewJobId, setPreviewJobId] = useState<string | null>(null);
+  const [editJobId, setEditJobId] = useState<string | null>(null);
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -141,14 +144,24 @@ export function JobList({ jobs }: { jobs: Job[] }) {
               </TableCell>
               <TableCell className="text-right">
                 {job.status === 'complete' && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setPreviewJobId(job.id)}
-                  >
-                    <EyeIcon className="size-4" />
-                    View
-                  </Button>
+                  <div className="flex items-center justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setPreviewJobId(job.id)}
+                    >
+                      <EyeIcon className="size-4" />
+                      View
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditJobId(job.id)}
+                    >
+                      <PencilIcon className="size-4" />
+                      Edit
+                    </Button>
+                  </div>
                 )}
                 {(job.status === 'error' || job.status === 'invalid') && (
                   <Button
@@ -183,6 +196,14 @@ export function JobList({ jobs }: { jobs: Job[] }) {
         open={!!previewJobId}
         onOpenChange={(open) => {
           if (!open) setPreviewJobId(null);
+        }}
+      />
+
+      <ResumeEditDialog
+        jobId={editJobId}
+        open={!!editJobId}
+        onOpenChange={(open) => {
+          if (!open) setEditJobId(null);
         }}
       />
     </>

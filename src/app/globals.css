@@ -120,6 +120,17 @@
     @apply bg-background text-foreground;
   }
 
+  /* Emil Kowalski: custom easing for entering overlays (ease-out-expo) */
+  [data-state='open'][class*='animate-in'] {
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Faster, snappier exit */
+  [data-state='closed'][class*='animate-out'] {
+    animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+    animation-duration: 150ms;
+  }
+
   /* Scrollbar styling */
   ::-webkit-scrollbar {
     width: 10px;

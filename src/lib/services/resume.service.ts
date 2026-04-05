@@ -36,3 +36,20 @@ export const getResumeByJobId = async (jobId: string) => {
 
   return result ?? null;
 };
+
+export const updateResumeAnalysis = async (
+  jobId: string,
+  userId: string,
+  analysis: any
+) => {
+  const existing = await getResumeByJobId(jobId);
+  if (!existing || existing.userId !== userId) return null;
+
+  const [updated] = await db
+    .update(resumeSchema)
+    .set({ analysis })
+    .where(eq(resumeSchema.id, existing.id))
+    .returning();
+
+  return updated ?? null;
+};
