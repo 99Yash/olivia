@@ -7,43 +7,45 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { ValidatedResumeData } from '~/lib/schemas/resume';
 import { Button } from '../ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Spinner } from '../ui/spinner';
-import { ResumeDiffDialog } from './resume-diff-dialog';
+import { Textarea } from '../ui/textarea';
 import { ResumeDocument } from './resume-document';
+import { ResumeDiffDialog } from './resume-diff-dialog';
 import { ResumeEditForm } from './resume-edit-form';
 
-export function ResumeEditDialog({
-  jobId,
+export function BaseResumeEditDialog({
   open,
   onOpenChange,
+  onSaved,
 }: {
-  jobId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSaved?: () => void;
 }) {
-  const [originalData, setOriginalData] =
-    useState<ValidatedResumeData | null>(null);
-  const [editedData, setEditedData] =
-    useState<ValidatedResumeData | null>(null);
+  const [originalData, setOriginalData] = useState<ValidatedResumeData | null>(
+    null,
+  );
+  const [editedData, setEditedData] = useState<ValidatedResumeData | null>(
+    null,
+  );
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // ATS optimization state
+  const [jobDescription, setJobDescription] = useState('');
   const [optimizing, setOptimizing] = useState(false);
+  const [showOptimize, setShowOptimize] = useState(false);
   const [preOptimizeData, setPreOptimizeData] =
     useState<ValidatedResumeData | null>(null);
   const [showDiff, setShowDiff] = useState(false);
 
-  const fetchResume = useCallback(async (id: string) => {
+  const fetchResume = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/jobs/${id}/resume`);
+      const res = await fetch('/api/resume');
       if (!res.ok) {
         setError('Failed to load resume');
         return;
@@ -61,15 +63,17 @@ export function ResumeEditDialog({
   }, []);
 
   useEffect(() => {
-    if (open && jobId) {
-      fetchResume(jobId);
+    if (open) {
+      fetchResume();
     } else {
       setOriginalData(null);
       setEditedData(null);
       setError(null);
+      setJobDescription('');
+      setShowOptimize(false);
       setPreOptimizeData(null);
     }
-  }, [open, jobId, fetchResume]);
+  }, [open, fetchResume]);
 
   const isDirty =
     editedData &&
@@ -77,10 +81,10 @@ export function ResumeEditDialog({
     JSON.stringify(editedData) !== JSON.stringify(originalData);
 
   const handleSave = async () => {
-    if (!jobId || !editedData) return;
+    if (!editedData) return;
     setSaving(true);
     try {
-      const res = await fetch(`/api/jobs/${jobId}/resume`, {
+      const res = await fetch('/api/resume', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ analysis: editedData }),
@@ -91,6 +95,7 @@ export function ResumeEditDialog({
       }
       setOriginalData(editedData);
       toast.success('Resume saved');
+      onSaved?.();
     } catch {
       toast.error('Failed to save resume');
     } finally {
@@ -106,11 +111,16 @@ export function ResumeEditDialog({
   };
 
   const handleOptimize = async () => {
-    if (!jobId) return;
+    if (!jobDescription.trim()) {
+      toast.error('Paste a job description first');
+      return;
+    }
     setOptimizing(true);
     try {
-      const res = await fetch(`/api/jobs/${jobId}/resume/optimize`, {
+      const res = await fetch('/api/resume/optimize', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobDescription: jobDescription.trim() }),
       });
       if (!res.ok) {
         toast.error('Optimization failed');
@@ -119,6 +129,8 @@ export function ResumeEditDialog({
       const data = await res.json();
       setPreOptimizeData(editedData);
       setEditedData(data.analysis);
+      setShowOptimize(false);
+      setJobDescription('');
       setShowDiff(true);
       toast.success('Resume optimized for ATS');
     } catch {
@@ -137,28 +149,18 @@ export function ResumeEditDialog({
       after={editedData}
     />
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[95vh] w-[95vw] !max-w-[95vw] flex-col p-0">
+      <DialogContent className="flex h-[95vh] w-[95vw] max-w-[95vw]! flex-col p-0">
         <DialogHeader className="shrink-0 border-b px-6 py-3">
           <div className="flex items-center justify-between">
-            <DialogTitle>Edit Resume</DialogTitle>
+            <DialogTitle>Edit Base Resume</DialogTitle>
             <div className="flex items-center gap-2">
               <Button
-                variant="outline"
+                variant={showOptimize ? 'secondary' : 'outline'}
                 size="sm"
-                disabled={optimizing || !editedData}
-                onClick={handleOptimize}
+                onClick={() => setShowOptimize(!showOptimize)}
               >
-                {optimizing ? (
-                  <>
-                    <Spinner className="size-3" />
-                    Optimizing...
-                  </>
-                ) : (
-                  <>
-                    <SparklesIcon className="size-4" />
-                    Optimize for ATS
-                  </>
-                )}
+                <SparklesIcon className="size-4" />
+                Optimize for ATS
               </Button>
               {preOptimizeData && (
                 <Button
@@ -172,18 +174,10 @@ export function ResumeEditDialog({
               )}
               {isDirty && (
                 <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleDiscard}
-                  >
+                  <Button variant="ghost" size="sm" onClick={handleDiscard}>
                     Discard
                   </Button>
-                  <Button
-                    size="sm"
-                    disabled={saving}
-                    onClick={handleSave}
-                  >
+                  <Button size="sm" disabled={saving} onClick={handleSave}>
                     {saving ? (
                       <>
                         <Spinner className="size-3" />
@@ -198,14 +192,10 @@ export function ResumeEditDialog({
               {editedData && !isDirty && (
                 <PDFDownloadLink
                   document={<ResumeDocument data={editedData} />}
-                  fileName="tailored-resume.pdf"
+                  fileName="resume.pdf"
                 >
                   {({ loading: downloading }) => (
-                    <Button
-                      disabled={downloading}
-                      variant="outline"
-                      size="sm"
-                    >
+                    <Button disabled={downloading} variant="outline" size="sm">
                       <DownloadIcon className="size-4" />
                       {downloading ? 'Preparing...' : 'Download'}
                     </Button>
@@ -215,6 +205,50 @@ export function ResumeEditDialog({
             </div>
           </div>
         </DialogHeader>
+
+        {/* ATS Optimization Panel */}
+        {showOptimize && (
+          <motion.div
+            className="shrink-0 border-b bg-muted/50 px-6 py-4"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+          >
+            <p className="mb-2 text-sm font-medium">
+              Paste the job description to optimize your resume for ATS
+            </p>
+            <Textarea
+              className="mb-3 min-h-[120px] bg-background"
+              placeholder="Paste the full job description here..."
+              value={jobDescription}
+              onChange={(e) => setJobDescription(e.target.value)}
+              disabled={optimizing}
+            />
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                disabled={optimizing || !jobDescription.trim()}
+                onClick={handleOptimize}
+              >
+                {optimizing ? (
+                  <>
+                    <Spinner className="size-3" />
+                    Optimizing...
+                  </>
+                ) : (
+                  <>
+                    <SparklesIcon className="size-3" />
+                    Optimize
+                  </>
+                )}
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Uses AI to rewrite your resume with ATS-friendly keywords from
+                the job description
+              </p>
+            </div>
+          </motion.div>
+        )}
 
         <div className="flex min-h-0 flex-1">
           {loading && (
