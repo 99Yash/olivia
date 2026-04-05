@@ -36,3 +36,40 @@ export const getResumeByJobId = async (jobId: string) => {
 
   return result ?? null;
 };
+
+export const updateResumeAnalysis = async (
+  jobId: string,
+  userId: string,
+  analysis: NewResume['analysis']
+) => {
+  const existing = await getResumeByJobId(jobId);
+  if (!existing || existing.userId !== userId) return null;
+
+  const [updated] = await db
+    .update(resumeSchema)
+    .set({ analysis })
+    .where(
+      and(eq(resumeSchema.id, existing.id), eq(resumeSchema.userId, userId))
+    )
+    .returning();
+
+  return updated ?? null;
+};
+
+export const updateBaseResumeAnalysis = async (
+  userId: string,
+  analysis: NewResume['analysis']
+) => {
+  const base = await getBaseResume(userId);
+  if (!base) return null;
+
+  const [updated] = await db
+    .update(resumeSchema)
+    .set({ analysis })
+    .where(
+      and(eq(resumeSchema.id, base.id), eq(resumeSchema.userId, userId))
+    )
+    .returning();
+
+  return updated ?? null;
+};

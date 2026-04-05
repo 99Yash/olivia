@@ -3,14 +3,11 @@ import { NextResponse } from 'next/server';
 import { auth } from '~/lib/auth/server';
 import { resume_parse_object } from '~/lib/schemas/resume';
 import {
-  getResumeByJobId,
-  updateResumeAnalysis,
+  getBaseResume,
+  updateBaseResumeAnalysis,
 } from '~/lib/services/resume.service';
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ jobId: string }> }
-) {
+export async function GET() {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -19,12 +16,11 @@ export async function GET(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { jobId } = await params;
-  const resume = await getResumeByJobId(jobId);
+  const resume = await getBaseResume(session.user.id);
 
-  if (!resume || resume.userId !== session.user.id) {
+  if (!resume) {
     return NextResponse.json(
-      { error: 'Resume not found' },
+      { error: 'No base resume found' },
       { status: 404 }
     );
   }
@@ -32,10 +28,7 @@ export async function GET(
   return NextResponse.json(resume);
 }
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ jobId: string }> }
-) {
+export async function PATCH(request: Request) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -44,7 +37,6 @@ export async function PATCH(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { jobId } = await params;
   const body = await request.json();
   const parsed = resume_parse_object.safeParse(body.analysis);
 
@@ -55,15 +47,14 @@ export async function PATCH(
     );
   }
 
-  const updated = await updateResumeAnalysis(
-    jobId,
+  const updated = await updateBaseResumeAnalysis(
     session.user.id,
     parsed.data
   );
 
   if (!updated) {
     return NextResponse.json(
-      { error: 'Resume not found' },
+      { error: 'No base resume found' },
       { status: 404 }
     );
   }
