@@ -10,17 +10,17 @@ export interface FormattingState {
   unorderedList: boolean;
 }
 
-export interface ToolbarOption {
-  id: string;
-  icon?: React.ComponentType<{ className?: string }>;
-  label?: string;
-  command?: string;
-  value?: string;
-  onClick?: () => void;
-  isActive?: boolean;
-  separator?: boolean;
-  disabled?: boolean;
-}
+export type ToolbarOption =
+  | { id: string; separator: true }
+  | {
+      id: string;
+      separator?: false;
+      icon: React.ComponentType<{ className?: string }>;
+      label: string;
+      onClick: () => void;
+      isActive?: boolean;
+      disabled?: boolean;
+    };
 
 export interface RichTextEditorProps {
   initialContent?: string;

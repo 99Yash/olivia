@@ -33,7 +33,6 @@ export function useRichTextEditor(
   });
 
   const removeFormattingOnNextInput = useRef<Set<FormatType>>(new Set());
-  const toggleOffPosition = useRef<{ node: Node; offset: number } | null>(null);
 
   const findFormattedAncestor = useCallback(
     (node: Node, editor: HTMLElement, formatType: FormatType): HTMLElement | null => {
@@ -200,7 +199,6 @@ export function useRichTextEditor(
       selection.addRange(newRange);
 
       removeFormattingOnNextInput.current.add(formatType);
-      toggleOffPosition.current = { node: plainTextNode, offset: 1 };
     }, []
   );
 
@@ -291,8 +289,7 @@ export function useRichTextEditor(
           const sanitized = sanitizeHtml(value);
           const temp = document.createElement('div');
           temp.innerHTML = sanitized;
-          const nodes: Node[] = [];
-          while (temp.firstChild) nodes.push(temp.firstChild);
+          const nodes: Node[] = Array.from(temp.childNodes);
           if (!range.collapsed) range.deleteContents();
           nodes.forEach((node, i) => {
             if (i === 0) range.insertNode(node);
@@ -407,20 +404,23 @@ export function useRichTextEditor(
 
   const focus = useCallback(() => editorRef.current?.focus(), []);
 
-  // Initialize content
+  // Initialize content. Sync from initialContent on mount, and also when it
+  // changes externally — but never while the editor is focused, since that
+  // would clobber the user's in-progress edits (the editor itself is the
+  // source of truth during editing via onChange).
   const prevContentRef = useRef<string | null>(null);
   useEffect(() => {
     const editor = editorRef.current;
     if (!editor) return;
 
     const isMount = prevContentRef.current === null;
-    const isReset =
-      prevContentRef.current && prevContentRef.current !== '' &&
-      initialContent.trim() === '' && editor.innerHTML.trim() !== '';
+    const isFocused = document.activeElement === editor;
+    const sanitized = initialContent.trim() ? sanitizeHtml(initialContent) : '';
+    const differs = sanitized !== editor.innerHTML;
 
-    if (isMount || isReset) {
-      if (initialContent.trim()) {
-        editor.innerHTML = sanitizeHtml(initialContent);
+    if (isMount || (differs && !isFocused)) {
+      if (sanitized) {
+        editor.innerHTML = sanitized;
         editor.removeAttribute('data-empty');
       } else {
         editor.innerHTML = '';
@@ -493,7 +493,6 @@ export function useRichTextEditor(
           }
         }
         removeFormattingOnNextInput.current.clear();
-        toggleOffPosition.current = null;
       }
 
       if (editor.innerHTML === '<br>' || editor.innerHTML === '') editor.innerHTML = '';
@@ -507,7 +506,30 @@ export function useRichTextEditor(
 
     const handleMouseDown = () => {
       removeFormattingOnNextInput.current.clear();
-      toggleOffPosition.current = null;
+    };
+
+    const handlePaste = (e: ClipboardEvent) => {
+      e.preventDefault();
+      const html = e.clipboardData?.getData('text/html');
+      const text = e.clipboardData?.getData('text/plain');
+      if (html) {
+        formatText('insertHTML', sanitizeHtml(html));
+      } else if (text) {
+        formatText('insertText', text);
+      }
+    };
+
+    const handleDrop = (e: DragEvent) => {
+      const html = e.dataTransfer?.getData('text/html');
+      const text = e.dataTransfer?.getData('text/plain');
+      if (!html && !text) return;
+      e.preventDefault();
+      editor.focus();
+      if (html) {
+        formatText('insertHTML', sanitizeHtml(html));
+      } else if (text) {
+        formatText('insertText', text);
+      }
     };
 
     const handleKeyUp = () => updateFormattingState();
@@ -519,6 +541,8 @@ export function useRichTextEditor(
     editor.addEventListener('mousedown', handleMouseDown);
     editor.addEventListener('keyup', handleKeyUp);
     editor.addEventListener('focus', handleFocus);
+    editor.addEventListener('paste', handlePaste);
+    editor.addEventListener('drop', handleDrop);
 
     return () => {
       document.removeEventListener('selectionchange', handleSelectionChange);
@@ -527,8 +551,10 @@ export function useRichTextEditor(
       editor.removeEventListener('mousedown', handleMouseDown);
       editor.removeEventListener('keyup', handleKeyUp);
       editor.removeEventListener('focus', handleFocus);
+      editor.removeEventListener('paste', handlePaste);
+      editor.removeEventListener('drop', handleDrop);
     };
-  }, [updateFormattingState, onChange, findFormattedAncestor]);
+  }, [updateFormattingState, onChange, findFormattedAncestor, formatText]);
 
   return {
     editorRef,

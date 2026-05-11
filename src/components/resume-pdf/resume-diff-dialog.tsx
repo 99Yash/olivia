@@ -29,6 +29,51 @@ function formatDate(
   return m ? `${m} ${d.year}` : `${d.year}`;
 }
 
+// Converts rich-text editor HTML into a readable markdown-ish plain-text form
+// for the diff view. Without this, raw tags (e.g. `<span class="font-semibold">`)
+// would leak into the diff. Plain-text input is returned unchanged.
+function htmlToMarkdown(input: string | null | undefined): string {
+  if (!input) return '';
+  if (!/<[a-z][\s\S]*>/i.test(input)) return input;
+
+  const doc = new DOMParser().parseFromString(input, 'text/html');
+
+  const render = (node: Node): string => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return (node.textContent ?? '').replace(/​/g, '');
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE) return '';
+    const el = node as HTMLElement;
+    const tag = el.tagName.toLowerCase();
+    const inner = Array.from(el.childNodes).map(render).join('');
+
+    if (tag === 'br') return '\n';
+    if (tag === 'p' || tag === 'div') return inner + '\n';
+    if (tag === 'ul' || tag === 'ol') {
+      const items = Array.from(el.querySelectorAll(':scope > li'));
+      return (
+        items
+          .map((li, i) => {
+            const text = Array.from(li.childNodes).map(render).join('').trim();
+            return tag === 'ol' ? `${i + 1}. ${text}` : `- ${text}`;
+          })
+          .join('\n') + '\n'
+      );
+    }
+    if (tag === 'li') return inner;
+    if (tag === 'strong' || tag === 'b' || el.classList.contains('font-semibold')) {
+      return `**${inner}**`;
+    }
+    if (tag === 'em' || tag === 'i' || el.classList.contains('italic')) {
+      return `*${inner}*`;
+    }
+    if (tag === 'code') return `\`${inner}\``;
+    return inner;
+  };
+
+  return Array.from(doc.body.childNodes).map(render).join('').trim();
+}
+
 function resumeToText(data: ValidatedResumeData): string {
   const lines: string[] = [];
 
@@ -42,11 +87,11 @@ function resumeToText(data: ValidatedResumeData): string {
   if (contact.length) lines.push(contact.join(' | '));
 
   if (data.summary) {
-    lines.push('', '## Summary', data.summary);
+    lines.push('', '## Summary', htmlToMarkdown(data.summary));
   }
 
   if (data.highlights) {
-    lines.push('', '## Highlights', data.highlights);
+    lines.push('', '## Highlights', htmlToMarkdown(data.highlights));
   }
 
   if (data.experiences?.length) {
@@ -59,7 +104,7 @@ function resumeToText(data: ValidatedResumeData): string {
           `${dateRange}${pos.location ? ` | ${pos.location}` : ''}`
         );
         if (pos.description) {
-          lines.push(pos.description);
+          lines.push(htmlToMarkdown(pos.description));
         }
         lines.push('');
       }
@@ -83,7 +128,7 @@ function resumeToText(data: ValidatedResumeData): string {
     lines.push('## Projects');
     for (const proj of data.projects) {
       lines.push(`### ${proj.name ?? ''}`);
-      if (proj.description) lines.push(proj.description);
+      if (proj.description) lines.push(htmlToMarkdown(proj.description));
       lines.push(
         `${formatDate(proj.startsAt)} - ${formatDate(proj.endsAt, true)}`
       );
@@ -116,7 +161,7 @@ function resumeToText(data: ValidatedResumeData): string {
       lines.push(
         `- ${award.name ?? ''}${award.issuer ? ` — ${award.issuer}` : ''}`
       );
-      if (award.description) lines.push(`  ${award.description}`);
+      if (award.description) lines.push(`  ${htmlToMarkdown(award.description)}`);
     }
     lines.push('');
   }
@@ -127,7 +172,7 @@ function resumeToText(data: ValidatedResumeData): string {
       lines.push(
         `- ${pat.name ?? ''}${pat.patentNumber ? ` (${pat.patentNumber})` : ''}`
       );
-      if (pat.description) lines.push(`  ${pat.description}`);
+      if (pat.description) lines.push(`  ${htmlToMarkdown(pat.description)}`);
     }
     lines.push('');
   }

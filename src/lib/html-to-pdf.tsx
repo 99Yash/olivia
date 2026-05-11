@@ -158,6 +158,11 @@ function renderInlineElement(el: HTMLElement, key: number, baseStyle?: Style): R
     return <Text key={`s-${key}`} style={{ textDecoration: 'line-through' }}>{children}</Text>;
   }
 
+  // Underline
+  if (tag === 'u' || hasClass('underline')) {
+    return <Text key={`u-${key}`} style={{ textDecoration: 'underline' }}>{children}</Text>;
+  }
+
   // Code
   if (tag === 'code') {
     return <Text key={`c-${key}`} style={{ fontFamily: 'Courier' }}>{el.textContent}</Text>;
@@ -172,6 +177,8 @@ function renderInlineElement(el: HTMLElement, key: number, baseStyle?: Style): R
       spanStyle.fontStyle = 'italic';
     if (hasClass('line-through') || el.style.textDecorationLine?.includes('line-through'))
       spanStyle.textDecoration = 'line-through';
+    else if (hasClass('underline') || el.style.textDecorationLine?.includes('underline'))
+      spanStyle.textDecoration = 'underline';
 
     if (Object.keys(spanStyle).length > 0) {
       return <Text key={`sp-${key}`} style={spanStyle}>{children}</Text>;
