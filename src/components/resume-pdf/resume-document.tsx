@@ -10,6 +10,7 @@ import {
   View,
 } from '@react-pdf/renderer';
 import { format } from 'date-fns';
+import { HtmlToPdf } from '~/lib/html-to-pdf';
 import { ValidatedResumeData, normalizeSkills } from '~/lib/schemas/resume';
 
 Font.register({
@@ -238,7 +239,7 @@ export function ResumeDocument({ data }: { data: ValidatedResumeData }) {
         {/* Summary */}
         {data.summary && (
           <View wrap={false}>
-            <Text style={styles.description}>{data.summary}</Text>
+            <HtmlToPdf html={data.summary} style={styles.description} />
           </View>
         )}
 
@@ -246,7 +247,7 @@ export function ResumeDocument({ data }: { data: ValidatedResumeData }) {
         {data.highlights && (
           <View wrap={false} style={{ marginTop: 12 }}>
             <Text style={styles.sectionTitle}>Highlights</Text>
-            <Text style={styles.description}>{data.highlights}</Text>
+            <HtmlToPdf html={data.highlights} style={styles.description} />
           </View>
         )}
 
@@ -306,11 +307,7 @@ export function ResumeDocument({ data }: { data: ValidatedResumeData }) {
                     </View>
                     {pos.description && (
                       <View style={{ marginTop: 1 }}>
-                        {pos.description.split('\n\n').map((line, idx) => (
-                          <Text key={idx} style={styles.description}>
-                            {line}
-                          </Text>
-                        ))}
+                        <HtmlToPdf html={pos.description} style={styles.description} />
                       </View>
                     )}
                   </View>
@@ -382,11 +379,7 @@ export function ResumeDocument({ data }: { data: ValidatedResumeData }) {
                 </View>
                 {project.description && (
                   <View>
-                    {project.description.split('\n\n').map((line, idx) => (
-                      <Text key={idx} style={styles.description}>
-                        {line}
-                      </Text>
-                    ))}
+                    <HtmlToPdf html={project.description} style={styles.description} />
                   </View>
                 )}
               </View>
@@ -508,11 +501,7 @@ export function ResumeDocument({ data }: { data: ValidatedResumeData }) {
                 </View>
                 {award.description && (
                   <View>
-                    {award.description.split('\n\n').map((line, idx) => (
-                      <Text key={idx} style={styles.description}>
-                        {line}
-                      </Text>
-                    ))}
+                    <HtmlToPdf html={award.description} style={styles.description} />
                   </View>
                 )}
               </View>
@@ -568,11 +557,7 @@ export function ResumeDocument({ data }: { data: ValidatedResumeData }) {
                 </View>
                 {patent.description && (
                   <View>
-                    {patent.description.split('\n\n').map((line, idx) => (
-                      <Text key={idx} style={styles.description}>
-                        {line}
-                      </Text>
-                    ))}
+                    <HtmlToPdf html={patent.description} style={styles.description} />
                   </View>
                 )}
               </View>
