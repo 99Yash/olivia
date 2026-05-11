@@ -2,6 +2,7 @@
 
 import { PlusIcon, TrashIcon } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { RichTextEditor } from '~/components/rich-text-editor';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
@@ -224,22 +225,17 @@ function SummarySection({
   resumeData: ValidatedResumeData;
   updateField: (field: string, value: any, deb?: boolean) => void;
 }) {
-  const [text, setText] = useState(resumeData.summary ?? '');
-  useEffect(() => setText(resumeData.summary ?? ''), [resumeData.summary]);
-
   return (
     <AccordionItem value="summary">
       <AccordionTrigger className="px-1 font-semibold">
         Summary
       </AccordionTrigger>
       <AccordionContent className="px-1">
-        <Textarea
-          className="min-h-[160px]"
-          value={text}
-          onChange={(e) => {
-            setText(e.target.value);
-            updateField('summary', e.target.value, true);
-          }}
+        <RichTextEditor
+          initialContent={resumeData.summary ?? ''}
+          placeholder="Professional summary..."
+          minHeight="8rem"
+          onChange={(html) => updateField('summary', html, true)}
         />
       </AccordionContent>
     </AccordionItem>
@@ -253,25 +249,17 @@ function HighlightsSection({
   resumeData: ValidatedResumeData;
   updateField: (field: string, value: any, deb?: boolean) => void;
 }) {
-  const [text, setText] = useState(resumeData.highlights ?? '');
-  useEffect(
-    () => setText(resumeData.highlights ?? ''),
-    [resumeData.highlights]
-  );
-
   return (
     <AccordionItem value="highlights">
       <AccordionTrigger className="px-1 font-semibold">
         Highlights
       </AccordionTrigger>
       <AccordionContent className="px-1">
-        <Textarea
-          className="min-h-[160px]"
-          value={text}
-          onChange={(e) => {
-            setText(e.target.value);
-            updateField('highlights', e.target.value, true);
-          }}
+        <RichTextEditor
+          initialContent={resumeData.highlights ?? ''}
+          placeholder="Key highlights..."
+          minHeight="8rem"
+          onChange={(html) => updateField('highlights', html, true)}
         />
       </AccordionContent>
     </AccordionItem>
@@ -365,13 +353,14 @@ function ExperienceSection({
                   }}
                 />
                 <Field label="Description">
-                  <Textarea
-                    className="min-h-[120px]"
-                    value={pos.description ?? ''}
-                    onChange={(e) => {
+                  <RichTextEditor
+                    initialContent={pos.description ?? ''}
+                    placeholder="Describe your role and achievements..."
+                    minHeight="6rem"
+                    onChange={(html) => {
                       const u = [...local];
                       const positions = [...(exp.positions ?? [])];
-                      positions[j] = { ...pos, description: e.target.value };
+                      positions[j] = { ...pos, description: html };
                       u[i] = { ...exp, positions };
                       update(u, true);
                     }}
@@ -569,12 +558,13 @@ function ProjectsSection({
               />
             </Field>
             <Field label="Description">
-              <Textarea
-                className="min-h-[100px]"
-                value={proj.description ?? ''}
-                onChange={(e) => {
+              <RichTextEditor
+                initialContent={proj.description ?? ''}
+                placeholder="Describe the project..."
+                minHeight="5rem"
+                onChange={(html) => {
                   const u = [...local];
-                  u[i] = { ...proj, description: e.target.value };
+                  u[i] = { ...proj, description: html };
                   update(u, true);
                 }}
               />
@@ -629,7 +619,13 @@ function SkillsSection({
   resumeData: ValidatedResumeData;
   updateField: (field: string, value: any, deb?: boolean) => void;
 }) {
-  const skills = resumeData.skills ?? [];
+  const [local, setLocal] = useState(resumeData.skills ?? []);
+  useEffect(() => setLocal(resumeData.skills ?? []), [resumeData.skills]);
+
+  const update = (updated: typeof local, deb = false) => {
+    setLocal(updated);
+    updateField('skills', updated, deb);
+  };
 
   return (
     <AccordionItem value="skills">
@@ -637,16 +633,16 @@ function SkillsSection({
         Skills
       </AccordionTrigger>
       <AccordionContent className="space-y-4 px-1">
-        {skills.map((cat, i) => (
+        {local.map((cat, i) => (
           <div key={i} className="space-y-2 rounded-md border p-3">
             <Field label="Category Title">
               <Input
                 value={cat.title ?? ''}
                 placeholder="e.g., Programming Languages"
                 onChange={(e) => {
-                  const u = [...skills];
+                  const u = [...local];
                   u[i] = { ...cat, title: e.target.value || null };
-                  updateField('skills', u, true);
+                  update(u, true);
                 }}
               />
             </Field>
@@ -656,21 +652,21 @@ function SkillsSection({
                 value={cat.skills?.join(', ') ?? ''}
                 placeholder="React, TypeScript, Node.js"
                 onChange={(e) => {
-                  const u = [...skills];
+                  const u = [...local];
                   u[i] = {
                     ...cat,
                     skills: e.target.value.split(',').map((s) => s.trim()),
                   };
-                  updateField('skills', u, true);
+                  update(u, true);
                 }}
               />
             </Field>
             <RemoveButton
               title="Remove Category"
               onClick={() => {
-                const u = [...skills];
+                const u = [...local];
                 u.splice(i, 1);
-                updateField('skills', u);
+                update(u);
               }}
             />
           </div>
@@ -678,7 +674,7 @@ function SkillsSection({
         <AddButton
           title="Add Skill Category"
           onClick={() =>
-            updateField('skills', [...skills, { title: null, skills: [] }])
+            update([...local, { title: null, skills: [] }])
           }
         />
       </AccordionContent>
@@ -817,12 +813,13 @@ function AwardsSection({
               />
             </Field>
             <Field label="Description">
-              <Textarea
-                className="min-h-[100px]"
-                value={award.description ?? ''}
-                onChange={(e) => {
+              <RichTextEditor
+                initialContent={award.description ?? ''}
+                placeholder="Describe the award..."
+                minHeight="5rem"
+                onChange={(html) => {
                   const u = [...local];
-                  u[i] = { ...award, description: e.target.value };
+                  u[i] = { ...award, description: html };
                   update(u, true);
                 }}
               />
@@ -912,12 +909,13 @@ function PatentsSection({
               />
             </Field>
             <Field label="Description">
-              <Textarea
-                className="min-h-[100px]"
-                value={pat.description ?? ''}
-                onChange={(e) => {
+              <RichTextEditor
+                initialContent={pat.description ?? ''}
+                placeholder="Describe the patent..."
+                minHeight="5rem"
+                onChange={(html) => {
                   const u = [...local];
-                  u[i] = { ...pat, description: e.target.value };
+                  u[i] = { ...pat, description: html };
                   update(u, true);
                 }}
               />
