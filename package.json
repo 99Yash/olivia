@@ -9,7 +9,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "verify:company-resume": "tsx scripts/verify-company-resume.tsx"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.36",

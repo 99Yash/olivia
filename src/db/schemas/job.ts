@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm';
 import {
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -7,6 +8,7 @@ import {
   unique,
   varchar,
 } from 'drizzle-orm/pg-core';
+import type { CompanyDesignProfile } from '~/lib/schemas/company-design';
 import { user } from './auth';
 import { createId, lifecycle_dates } from './helpers';
 import { resume } from './resume';
@@ -34,6 +36,7 @@ export const job = pgTable(
       .references(() => user.id, { onDelete: 'cascade' }),
     status: jobStatusEnum('status').default('pending').notNull(),
     content: text('content'),
+    designProfile: jsonb('design_profile').$type<CompanyDesignProfile>(),
     analyzedAt: timestamp('analyzed_at'),
     invalidReason: text('invalid_reason'),
     ...lifecycle_dates,

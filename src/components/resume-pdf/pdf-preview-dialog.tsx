@@ -3,6 +3,7 @@
 import { PDFDownloadLink, PDFViewer } from '@react-pdf/renderer';
 import { DownloadIcon } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import type { CompanyDesignProfile } from '~/lib/schemas/company-design';
 import { ValidatedResumeData } from '~/lib/schemas/resume';
 import { Button } from '../ui/button';
 import {
@@ -29,18 +30,28 @@ export function PdfPreviewDialog({
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [designProfile, setDesignProfile] =
+    useState<CompanyDesignProfile | null>(null);
 
   const fetchResume = useCallback(async (id: string) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/jobs/${id}/resume`);
+      const [res, designRes] = await Promise.all([
+        fetch(`/api/jobs/${id}/resume`),
+        fetch(`/api/jobs/${id}/design-system`),
+      ]);
       if (!res.ok) {
         setError('Failed to load resume');
         return;
       }
       const data = await res.json();
       setResumeData(data.analysis);
+      if (designRes.ok) {
+        const designData = await designRes.json();
+        const profile = designData.profile as CompanyDesignProfile | null;
+        setDesignProfile(profile?.confidence === 'low' ? null : profile);
+      }
     } catch {
       setError('Failed to load resume');
     } finally {
@@ -53,6 +64,7 @@ export function PdfPreviewDialog({
       fetchResume(jobId);
     } else {
       setResumeData(null);
+      setDesignProfile(null);
       setError(null);
     }
   }, [open, jobId, fetchResume]);
@@ -61,7 +73,14 @@ export function PdfPreviewDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-6xl w-[90vw] h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Tailored Resume Preview</DialogTitle>
+          <DialogTitle>
+            Tailored Resume Preview
+            {designProfile && (
+              <span className="ml-2 text-sm font-normal text-muted-foreground">
+                · {designProfile.companyName} style
+              </span>
+            )}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="flex-1 min-h-0">
@@ -84,7 +103,10 @@ export function PdfPreviewDialog({
               showToolbar={false}
               className="rounded-md border"
             >
-              <ResumeDocument data={resumeData} />
+              <ResumeDocument
+                data={resumeData}
+                designProfile={designProfile}
+              />
             </PDFViewer>
           )}
         </div>
@@ -92,7 +114,12 @@ export function PdfPreviewDialog({
         {resumeData && (
           <DialogFooter>
             <PDFDownloadLink
-              document={<ResumeDocument data={resumeData} />}
+              document={
+                <ResumeDocument
+                  data={resumeData}
+                  designProfile={designProfile}
+                />
+              }
               fileName="tailored-resume.pdf"
             >
               {({ loading: downloading }) => (

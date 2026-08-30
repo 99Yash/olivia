@@ -5,6 +5,7 @@ import { DiffIcon, DownloadIcon, SparklesIcon } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import type { CompanyDesignProfile } from '~/lib/schemas/company-design';
 import { ValidatedResumeData } from '~/lib/schemas/resume';
 import { Button } from '../ui/button';
 import {
@@ -17,6 +18,7 @@ import { Spinner } from '../ui/spinner';
 import { ResumeDiffDialog } from './resume-diff-dialog';
 import { ResumeDocument } from './resume-document';
 import { ResumeEditForm } from './resume-edit-form';
+import { CompanyDesignPopover } from './company-design-popover';
 
 export function ResumeEditDialog({
   jobId,
@@ -38,12 +40,19 @@ export function ResumeEditDialog({
   const [preOptimizeData, setPreOptimizeData] =
     useState<ValidatedResumeData | null>(null);
   const [showDiff, setShowDiff] = useState(false);
+  const [designProfile, setDesignProfile] =
+    useState<CompanyDesignProfile | null>(null);
+  const [useCompanyStyle, setUseCompanyStyle] = useState(false);
+  const [discoveringDesign, setDiscoveringDesign] = useState(false);
 
   const fetchResume = useCallback(async (id: string) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/jobs/${id}/resume`);
+      const [res, designRes] = await Promise.all([
+        fetch(`/api/jobs/${id}/resume`),
+        fetch(`/api/jobs/${id}/design-system`),
+      ]);
       if (!res.ok) {
         setError('Failed to load resume');
         return;
@@ -51,6 +60,12 @@ export function ResumeEditDialog({
       const data = await res.json();
       setOriginalData(data.analysis);
       setEditedData(data.analysis);
+      if (designRes.ok) {
+        const designData = await designRes.json();
+        const profile = designData.profile as CompanyDesignProfile | null;
+        setDesignProfile(profile);
+        setUseCompanyStyle(profile?.confidence !== 'low' && !!profile);
+      }
     } catch {
       setError('Failed to load resume');
       setOriginalData(null);
@@ -68,6 +83,8 @@ export function ResumeEditDialog({
       setEditedData(null);
       setError(null);
       setPreOptimizeData(null);
+      setDesignProfile(null);
+      setUseCompanyStyle(false);
     }
   }, [open, jobId, fetchResume]);
 
@@ -128,6 +145,28 @@ export function ResumeEditDialog({
     }
   };
 
+  const handleDiscoverDesign = async () => {
+    if (!jobId) return;
+    setDiscoveringDesign(true);
+    try {
+      const res = await fetch(`/api/jobs/${jobId}/design-system`, {
+        method: 'POST',
+      });
+      if (!res.ok) {
+        toast.error('Could not find a reliable public design source');
+        return;
+      }
+      const data = await res.json();
+      setDesignProfile(data.profile);
+      setUseCompanyStyle(data.profile.confidence !== 'low');
+      toast.success('Company design language is ready');
+    } catch {
+      toast.error('Could not find a reliable public design source');
+    } finally {
+      setDiscoveringDesign(false);
+    }
+  };
+
   return (
     <>
     <ResumeDiffDialog
@@ -142,6 +181,13 @@ export function ResumeEditDialog({
           <div className="flex items-center justify-between">
             <DialogTitle>Edit Resume</DialogTitle>
             <div className="flex items-center gap-2">
+              <CompanyDesignPopover
+                profile={designProfile}
+                enabled={useCompanyStyle}
+                discovering={discoveringDesign}
+                onEnabledChange={setUseCompanyStyle}
+                onRefresh={handleDiscoverDesign}
+              />
               <Button
                 variant="outline"
                 size="sm"
@@ -197,7 +243,12 @@ export function ResumeEditDialog({
               )}
               {editedData && !isDirty && (
                 <PDFDownloadLink
-                  document={<ResumeDocument data={editedData} />}
+                  document={
+                    <ResumeDocument
+                      data={editedData}
+                      designProfile={useCompanyStyle ? designProfile : null}
+                    />
+                  }
                   fileName="tailored-resume.pdf"
                 >
                   {({ loading: downloading }) => (
@@ -262,7 +313,10 @@ export function ResumeEditDialog({
                   showToolbar={false}
                   className="rounded-md border"
                 >
-                  <ResumeDocument data={editedData} />
+                  <ResumeDocument
+                    data={editedData}
+                    designProfile={useCompanyStyle ? designProfile : null}
+                  />
                 </PDFViewer>
               </motion.div>
             </>

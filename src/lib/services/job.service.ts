@@ -20,6 +20,27 @@ export async function updateJobStatus(
   return updated;
 }
 
+export async function updateJobDesignProfile(
+  jobId: string,
+  userId: string,
+  designProfile: NonNullable<Job['designProfile']>
+) {
+  const [updated] = await db
+    .update(job)
+    .set({ designProfile })
+    .where(and(eq(job.id, jobId), eq(job.userId, userId)))
+    .returning();
+  return updated ?? null;
+}
+
+export async function getJobByIdAndUser(jobId: string, userId: string) {
+  const [existing] = await db
+    .select()
+    .from(job)
+    .where(and(eq(job.id, jobId), eq(job.userId, userId)));
+  return existing ?? null;
+}
+
 export async function getJobsByUser(userId: string) {
   return db
     .select()

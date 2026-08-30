@@ -1,8 +1,9 @@
 import { getErrorMessage } from '../errors';
 import { tailorResume, verifyJobDescription } from './ai.service';
-import { updateJobStatus } from './job.service';
+import { updateJobDesignProfile, updateJobStatus } from './job.service';
 import { addResume, getBaseResume } from './resume.service';
 import { scrapeJobPage } from './scrape.service';
+import { discoverCompanyDesign } from './company-design.service';
 
 export async function runTailoringWorkflow(
   jobId: string,
@@ -12,7 +13,8 @@ export async function runTailoringWorkflow(
   try {
     // 1. Scraping
     await updateJobStatus(jobId, 'scraping');
-    const { markdown, title } = await scrapeJobPage(url);
+    const { markdown, title, links, branding, hiringOrganization } =
+      await scrapeJobPage(url);
 
     // 2. Validate job description
     const { valid, reason } = await verifyJobDescription(markdown);
@@ -39,7 +41,20 @@ export async function runTailoringWorkflow(
 
     // 5. Tailor resume
     await updateJobStatus(jobId, 'tailoring');
-    const tailored = await tailorResume(baseResume.analysis, markdown);
+    const designPromise = discoverCompanyDesign({
+      url,
+      title,
+      content: markdown,
+      links,
+      jobPageBranding: branding,
+      hiringOrganization,
+    })
+      .then((profile) => updateJobDesignProfile(jobId, userId, profile))
+      .catch(() => null);
+    const [tailored] = await Promise.all([
+      tailorResume(baseResume.analysis, markdown),
+      designPromise,
+    ]);
 
     // 6. Store tailored resume
     await addResume({

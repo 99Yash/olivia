@@ -49,6 +49,7 @@ export function SubmitJobForm({
       userId: '',
       status: 'pending',
       content: null,
+      designProfile: null,
       analyzedAt: null,
       invalidReason: null,
       createdAt: new Date(),
