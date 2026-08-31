@@ -8,7 +8,6 @@ import {
   unique,
   varchar,
 } from 'drizzle-orm/pg-core';
-import type { CompanyDesignProfile } from '~/lib/schemas/company-design';
 import { user } from './auth';
 import { createId, lifecycle_dates } from './helpers';
 import { resume } from './resume';
@@ -20,6 +19,13 @@ export const jobStatusEnum = pgEnum('job_status', [
   'tailoring',
   'complete',
   'invalid',
+  'error',
+]);
+
+export const companyDesignStatusEnum = pgEnum('company_design_status', [
+  'idle',
+  'discovering',
+  'complete',
   'error',
 ]);
 
@@ -36,7 +42,10 @@ export const job = pgTable(
       .references(() => user.id, { onDelete: 'cascade' }),
     status: jobStatusEnum('status').default('pending').notNull(),
     content: text('content'),
-    designProfile: jsonb('design_profile').$type<CompanyDesignProfile>(),
+    designProfile: jsonb('design_profile'),
+    designStatus: companyDesignStatusEnum('design_status')
+      .default('idle')
+      .notNull(),
     analyzedAt: timestamp('analyzed_at'),
     invalidReason: text('invalid_reason'),
     ...lifecycle_dates,

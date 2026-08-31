@@ -10,7 +10,9 @@ import {
   View,
 } from '@react-pdf/renderer';
 import { format } from 'date-fns';
+import { useMemo } from 'react';
 import { HtmlToPdf } from '~/lib/html-to-pdf';
+import { deriveResumeTheme, type ResumeTheme } from '~/lib/resume-theme';
 import type { CompanyDesignProfile } from '~/lib/schemas/company-design';
 import { ValidatedResumeData, normalizeSkills } from '~/lib/schemas/resume';
 
@@ -44,62 +46,23 @@ const FONT_SIZES = {
   SMALL: 8.5,
 };
 
-type ResumeTheme = {
-  accent: string;
-  foreground: string;
-  mutedForeground: string;
-  muted: string;
-  background: string;
-  link: string;
-  headingFont: string;
-  companyStyle: boolean;
-};
-
-function resolveTheme(profile?: CompanyDesignProfile | null): ResumeTheme {
-  if (!profile) {
-    return {
-      accent: '#059669',
-      foreground: '#000000',
-      mutedForeground: '#333333',
-      muted: '#7d817b',
-      background: '#ffffff',
-      link: '#3d58e1',
-      headingFont: 'Roboto',
-      companyStyle: false,
-    };
-  }
-  const editorial = ['editorial', 'traditional'].includes(
-    profile.typography.character
-  );
-  return {
-    accent: profile.colors.primary,
-    foreground: profile.colors.text,
-    mutedForeground: profile.colors.muted,
-    muted: profile.colors.muted,
-    background: '#ffffff',
-    link: profile.colors.primary,
-    headingFont: editorial ? 'Times-Roman' : 'Roboto',
-    companyStyle: true,
-  };
-}
-
 function createStyles(theme: ResumeTheme) {
   return StyleSheet.create({
   page: {
-    paddingTop: theme.companyStyle ? 30 : 24,
-    paddingRight: theme.companyStyle ? 30 : 24,
-    paddingBottom: theme.companyStyle ? 30 : 24,
-    paddingLeft: theme.companyStyle ? 30 : 24,
+    paddingTop: theme.pagePadding,
+    paddingRight: theme.pagePadding,
+    paddingBottom: theme.pagePadding,
+    paddingLeft: theme.pagePadding,
     backgroundColor: theme.background,
     flexDirection: 'column',
-    fontFamily: 'Roboto',
+    fontFamily: theme.bodyFont,
   },
   headerBar: {
     width: '100%',
-    height: theme.companyStyle ? 1.5 : 3,
+    height: theme.headerRuleHeight,
     backgroundColor: theme.accent,
-    marginTop: theme.companyStyle ? 10 : 5,
-    marginBottom: theme.companyStyle ? 12 : 5,
+    marginTop: theme.headerMarginTop,
+    marginBottom: theme.headerMarginBottom,
   },
   name: {
     fontSize: 24,
@@ -122,12 +85,6 @@ function createStyles(theme: ResumeTheme) {
     alignItems: 'flex-start',
     gap: 2,
   },
-  companyRole: {
-    fontSize: 11,
-    color: theme.mutedForeground,
-    fontFamily: 'Roboto',
-    marginTop: 1,
-  },
   companyContact: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -140,15 +97,15 @@ function createStyles(theme: ResumeTheme) {
   description: {
     fontSize: FONT_SIZES.MEDIUM,
     color: theme.mutedForeground,
-    lineHeight: theme.companyStyle ? 1.35 : 1.25,
+    lineHeight: theme.descriptionLineHeight,
   },
   sectionTitle: {
     fontSize: FONT_SIZES.LARGE,
     fontFamily: theme.headingFont,
     fontWeight: 700,
-    color: theme.companyStyle ? theme.foreground : theme.accent,
+    color: theme.sectionTitleColor,
     textTransform: 'uppercase',
-    letterSpacing: theme.companyStyle ? 0.9 : 0,
+    letterSpacing: 0,
     width: '100%',
     marginTop: 3,
     marginBottom: 3,
@@ -249,6 +206,60 @@ function normalizeUrlForHref(url: string): string {
   return `https://${url}`;
 }
 
+function ContactRow({
+  data,
+  theme,
+  styles,
+}: {
+  data: Pick<
+    ValidatedResumeData,
+    'location' | 'phone_number' | 'email' | 'website_url'
+  >;
+  theme: ResumeTheme;
+  styles: ReturnType<typeof createStyles>;
+}) {
+  return (
+    <View
+      style={
+        theme.variant === 'company-informed'
+          ? styles.companyContact
+          : styles.contactInfo
+      }
+    >
+      {data.location && <Text>{data.location}</Text>}
+      {data.phone_number && (
+        <>
+          {data.location && <Text>•</Text>}
+          <Text>{String(data.phone_number)}</Text>
+        </>
+      )}
+      {data.email && (
+        <>
+          {(data.phone_number || data.location) && <Text>•</Text>}
+          <Text>{data.email}</Text>
+        </>
+      )}
+      {data.website_url && (
+        <>
+          {(data.phone_number || data.email || data.location) && <Text>•</Text>}
+          <Link
+            style={{
+              color: theme.link,
+              textDecoration: 'none',
+              ...(theme.variant === 'company-informed'
+                ? {}
+                : { fontSize: FONT_SIZES.SMALL }),
+            }}
+            src={normalizeUrlForHref(data.website_url)}
+          >
+            {data.website_url}
+          </Link>
+        </>
+      )}
+    </View>
+  );
+}
+
 export function ResumeDocument({
   data,
   designProfile,
@@ -256,85 +267,23 @@ export function ResumeDocument({
   data: ValidatedResumeData;
   designProfile?: CompanyDesignProfile | null;
 }) {
-  const theme = resolveTheme(designProfile);
-  const styles = createStyles(theme);
+  const theme = useMemo(
+    () => deriveResumeTheme(designProfile),
+    [designProfile]
+  );
+  const styles = useMemo(() => createStyles(theme), [theme]);
   return (
     <Document title={`${data.full_name ?? 'Resume'}`}>
       <Page size="A4" style={styles.page}>
-        {theme.companyStyle ? (
+        {theme.variant === 'company-informed' ? (
           <View style={styles.companyHeader}>
-            <View>
-              {data.full_name && <Text style={styles.name}>{data.full_name}</Text>}
-              {designProfile?.targetRole && (
-                <Text style={styles.companyRole}>{designProfile.targetRole}</Text>
-              )}
-            </View>
-            <View style={styles.companyContact}>
-              {data.location && <Text>{data.location}</Text>}
-              {data.phone_number && (
-                <>
-                  {data.location && <Text>•</Text>}
-                  <Text>{String(data.phone_number)}</Text>
-                </>
-              )}
-              {data.email && (
-                <>
-                  {(data.phone_number || data.location) && <Text>•</Text>}
-                  <Text>{data.email}</Text>
-                </>
-              )}
-              {data.website_url && (
-                <>
-                  {(data.phone_number || data.email || data.location) && (
-                    <Text>•</Text>
-                  )}
-                  <Link
-                    style={{ color: theme.link, textDecoration: 'none' }}
-                    src={normalizeUrlForHref(data.website_url)}
-                  >
-                    {data.website_url}
-                  </Link>
-                </>
-              )}
-            </View>
+            {data.full_name && <Text style={styles.name}>{data.full_name}</Text>}
+            <ContactRow data={data} theme={theme} styles={styles} />
           </View>
         ) : (
           <>
             {data.full_name && <Text style={styles.name}>{data.full_name}</Text>}
-            <View style={styles.contactInfo}>
-              {data.location && <Text>{data.location}</Text>}
-              {data.phone_number && (
-                <>
-                  {data.location && <Text>•</Text>}
-                  <Text>{String(data.phone_number)}</Text>
-                </>
-              )}
-              {data.email && (
-                <>
-                  {(data.phone_number || data.location) && <Text>•</Text>}
-                  <Text>{data.email}</Text>
-                </>
-              )}
-              {data.website_url && (
-                <>
-                  {(data.phone_number || data.email || data.location) && (
-                    <Text>• </Text>
-                  )}
-                  <Text>
-                    <Link
-                      style={{
-                        color: theme.link,
-                        textDecoration: 'none',
-                        fontSize: FONT_SIZES.SMALL,
-                      }}
-                      src={normalizeUrlForHref(data.website_url)}
-                    >
-                      {data.website_url}
-                    </Link>
-                  </Text>
-                </>
-              )}
-            </View>
+            <ContactRow data={data} theme={theme} styles={styles} />
           </>
         )}
         <View style={styles.headerBar} />

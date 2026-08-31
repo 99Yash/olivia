@@ -50,6 +50,7 @@ export function SubmitJobForm({
       status: 'pending',
       content: null,
       designProfile: null,
+      designStatus: 'idle',
       analyzedAt: null,
       invalidReason: null,
       createdAt: new Date(),

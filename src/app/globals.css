@@ -193,9 +193,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-slot='popover-content'] {
-    animation: none !important;
-    transition: opacity 150ms ease !important;
+  .company-design-popover {
+    animation: none;
+    transition: opacity 150ms ease;
   }
 }
 

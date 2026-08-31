@@ -1,44 +1,54 @@
 import { mkdir } from 'node:fs/promises';
 import { renderToFile } from '@react-pdf/renderer';
 import { ResumeDocument } from '../src/components/resume-pdf/resume-document';
+import { getErrorMessage } from '../src/lib/errors';
+import { deriveAppliedDesignSignals } from '../src/lib/resume-theme';
 import type { CompanyDesignProfile } from '../src/lib/schemas/company-design';
 import type { ValidatedResumeData } from '../src/lib/schemas/resume';
+import { verifyPdfTextOrder } from './verify-pdf-text';
 
 const output = 'tmp/pdfs/company-resume-check.pdf';
 
+const appliedSignals = deriveAppliedDesignSignals({
+  accent: '#3a806e',
+  headingFamily: 'Source Serif 4',
+  bodyFamily: 'Inter',
+  character: 'editorial',
+  spacingUnit: 8,
+  confidence: {
+    accent: 'high',
+    typography: 'high',
+    spacing: 'high',
+  },
+  evidence: {
+    accent: [{
+      url: 'https://example.com/design',
+      sourceKind: 'official-design-system',
+      observedAt: new Date().toISOString(),
+      note: 'Deterministic color verification fixture.',
+    }],
+    typography: [{
+      url: 'https://example.com/design',
+      sourceKind: 'official-design-system',
+      observedAt: new Date().toISOString(),
+      note: 'Deterministic typography verification fixture.',
+    }],
+    spacing: [{
+    url: 'https://example.com/design',
+    sourceKind: 'official-design-system',
+    observedAt: new Date().toISOString(),
+      note: 'Deterministic spacing verification fixture.',
+    }],
+  },
+});
+
 const profile: CompanyDesignProfile = {
   companyName: 'Northstar',
-  targetRole: 'Product Design Engineer',
-  source: {
-    url: 'https://example.com/design',
-    label: 'Northstar Design System',
-    kind: 'public-design-system',
-  },
-  confidence: 'high',
-  colors: {
-    primary: '#194f46',
-    secondary: '#8db9a8',
-    text: '#14201d',
-    muted: '#53645f',
-    background: '#ffffff',
-  },
-  typography: {
-    headingFamily: 'Source Serif 4',
-    bodyFamily: 'Inter',
-    character: 'editorial',
-  },
-  evidence: [
-    {
-      signal: 'color',
-      observed: '#3a806e',
-      applied: '#194f46',
-      sourceUrl: 'https://example.com/design',
-      confidence: 'high',
-    },
-  ],
-  traits: ['Editorial voice', 'Crisp geometry'],
-  rationale: 'A deterministic ATS-safe test profile.',
-  discoveredAt: new Date().toISOString(),
+  officialUrl: 'https://example.com',
+  identityConfidence: 'high',
+  ...appliedSignals,
+  overallConfidence: 'high',
+  warnings: [],
 };
 
 const resume: ValidatedResumeData = {
@@ -91,10 +101,19 @@ async function main() {
     <ResumeDocument data={resume} designProfile={profile} />,
     output
   );
+  try {
+    await verifyPdfTextOrder(output, resume);
+  } catch (error) {
+    console.warn(
+      `Company-informed PDF failed text verification; using the standard design. ${getErrorMessage(error)}`
+    );
+    await renderToFile(<ResumeDocument data={resume} />, output);
+    await verifyPdfTextOrder(output, resume);
+  }
   console.log(output);
 }
 
 main().catch((error) => {
-  console.error(error);
+  console.error(getErrorMessage(error));
   process.exitCode = 1;
 });

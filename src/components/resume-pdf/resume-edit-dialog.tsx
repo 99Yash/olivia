@@ -5,7 +5,7 @@ import { DiffIcon, DownloadIcon, SparklesIcon } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import type { CompanyDesignProfile } from '~/lib/schemas/company-design';
+import { useCompanyDesign } from '~/hooks/use-company-design';
 import { ValidatedResumeData } from '~/lib/schemas/resume';
 import { Button } from '../ui/button';
 import {
@@ -24,10 +24,14 @@ export function ResumeEditDialog({
   jobId,
   open,
   onOpenChange,
+  companyDesignEnabled,
+  onCompanyDesignEnabledChange,
 }: {
   jobId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  companyDesignEnabled: boolean | undefined;
+  onCompanyDesignEnabledChange: (jobId: string, enabled: boolean) => void;
 }) {
   const [originalData, setOriginalData] =
     useState<ValidatedResumeData | null>(null);
@@ -40,19 +44,25 @@ export function ResumeEditDialog({
   const [preOptimizeData, setPreOptimizeData] =
     useState<ValidatedResumeData | null>(null);
   const [showDiff, setShowDiff] = useState(false);
-  const [designProfile, setDesignProfile] =
-    useState<CompanyDesignProfile | null>(null);
-  const [useCompanyStyle, setUseCompanyStyle] = useState(false);
-  const [discoveringDesign, setDiscoveringDesign] = useState(false);
+  const setCompanyDesignEnabled = useCallback(
+    (enabled: boolean) => {
+      if (jobId) onCompanyDesignEnabledChange(jobId, enabled);
+    },
+    [jobId, onCompanyDesignEnabledChange]
+  );
+  const { profile: designProfile, discovering, refresh } = useCompanyDesign({
+    jobId,
+    active: open,
+    enabled: companyDesignEnabled,
+    onEnabledChange: setCompanyDesignEnabled,
+  });
+  const useCompanyDesignProfile = companyDesignEnabled ?? false;
 
   const fetchResume = useCallback(async (id: string) => {
     setLoading(true);
     setError(null);
     try {
-      const [res, designRes] = await Promise.all([
-        fetch(`/api/jobs/${id}/resume`),
-        fetch(`/api/jobs/${id}/design-system`),
-      ]);
+      const res = await fetch(`/api/jobs/${id}/resume`);
       if (!res.ok) {
         setError('Failed to load resume');
         return;
@@ -60,12 +70,6 @@ export function ResumeEditDialog({
       const data = await res.json();
       setOriginalData(data.analysis);
       setEditedData(data.analysis);
-      if (designRes.ok) {
-        const designData = await designRes.json();
-        const profile = designData.profile as CompanyDesignProfile | null;
-        setDesignProfile(profile);
-        setUseCompanyStyle(profile?.confidence !== 'low' && !!profile);
-      }
     } catch {
       setError('Failed to load resume');
       setOriginalData(null);
@@ -83,8 +87,6 @@ export function ResumeEditDialog({
       setEditedData(null);
       setError(null);
       setPreOptimizeData(null);
-      setDesignProfile(null);
-      setUseCompanyStyle(false);
     }
   }, [open, jobId, fetchResume]);
 
@@ -145,28 +147,6 @@ export function ResumeEditDialog({
     }
   };
 
-  const handleDiscoverDesign = async () => {
-    if (!jobId) return;
-    setDiscoveringDesign(true);
-    try {
-      const res = await fetch(`/api/jobs/${jobId}/design-system`, {
-        method: 'POST',
-      });
-      if (!res.ok) {
-        toast.error('Could not find a reliable public design source');
-        return;
-      }
-      const data = await res.json();
-      setDesignProfile(data.profile);
-      setUseCompanyStyle(data.profile.confidence !== 'low');
-      toast.success('Company design language is ready');
-    } catch {
-      toast.error('Could not find a reliable public design source');
-    } finally {
-      setDiscoveringDesign(false);
-    }
-  };
-
   return (
     <>
     <ResumeDiffDialog
@@ -183,10 +163,10 @@ export function ResumeEditDialog({
             <div className="flex items-center gap-2">
               <CompanyDesignPopover
                 profile={designProfile}
-                enabled={useCompanyStyle}
-                discovering={discoveringDesign}
-                onEnabledChange={setUseCompanyStyle}
-                onRefresh={handleDiscoverDesign}
+                enabled={useCompanyDesignProfile}
+                discovering={discovering}
+                onEnabledChange={setCompanyDesignEnabled}
+                onRefresh={refresh}
               />
               <Button
                 variant="outline"
@@ -246,7 +226,9 @@ export function ResumeEditDialog({
                   document={
                     <ResumeDocument
                       data={editedData}
-                      designProfile={useCompanyStyle ? designProfile : null}
+                      designProfile={
+                        useCompanyDesignProfile ? designProfile : null
+                      }
                     />
                   }
                   fileName="tailored-resume.pdf"
@@ -315,7 +297,9 @@ export function ResumeEditDialog({
                 >
                   <ResumeDocument
                     data={editedData}
-                    designProfile={useCompanyStyle ? designProfile : null}
+                    designProfile={
+                      useCompanyDesignProfile ? designProfile : null
+                    }
                   />
                 </PDFViewer>
               </motion.div>

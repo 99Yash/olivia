@@ -1,50 +1,72 @@
 import { z } from 'zod';
 
-const hexColor = z.string().regex(/^#[0-9a-f]{6}$/i);
+export const designConfidenceSchema = z.enum(['high', 'medium', 'low']);
+export const designSourceKindSchema = z.enum([
+  'official-design-system',
+  'official-brand-guide',
+  'official-company-page',
+  'job-page',
+]);
+export const typographyCharacterSchema = z.enum([
+  'modern',
+  'humanist',
+  'editorial',
+  'technical',
+  'traditional',
+]);
+
+const hexColorSchema = z.string().regex(/^#[0-9a-f]{6}$/i);
+const evidenceSchema = z.object({
+  url: z.url(),
+  sourceKind: designSourceKindSchema,
+  observedAt: z.string().datetime(),
+  note: z.string().min(1),
+});
 
 export const companyDesignProfileSchema = z.object({
   companyName: z.string().min(1),
-  targetRole: z.string().nullable(),
-  source: z.object({
-    url: z.url(),
-    label: z.string().min(1),
-    kind: z.enum(['public-design-system', 'company-site', 'job-page']),
-  }),
-  confidence: z.enum(['high', 'medium', 'low']),
-  colors: z.object({
-    primary: hexColor,
-    secondary: hexColor.nullable(),
-    text: hexColor,
-    muted: hexColor,
-    background: hexColor,
+  officialUrl: z.url().nullable(),
+  identityConfidence: designConfidenceSchema,
+  accent: z.object({
+    observed: hexColorSchema.nullable(),
+    applied: hexColorSchema,
+    confidence: designConfidenceSchema,
+    evidence: z.array(evidenceSchema).min(1).max(4),
+    transformation: z.string().min(1).optional(),
   }),
   typography: z.object({
-    headingFamily: z.string().nullable(),
-    bodyFamily: z.string().nullable(),
-    character: z.enum([
-      'modern',
-      'humanist',
-      'editorial',
-      'technical',
-      'traditional',
-    ]),
+    observed: z.object({
+      headingFamily: z.string().min(1).nullable(),
+      bodyFamily: z.string().min(1).nullable(),
+      character: typographyCharacterSchema,
+    }),
+    applied: z.object({
+      safeFamily: z.enum(['Roboto', 'Times-Roman']),
+      character: typographyCharacterSchema,
+    }),
+    confidence: designConfidenceSchema,
+    evidence: z.array(evidenceSchema).min(1).max(4),
+    transformation: z.string().min(1).optional(),
   }),
-  evidence: z
-    .array(
-      z.object({
-        signal: z.enum(['color', 'heading-type', 'body-type', 'spacing']),
-        observed: z.string().min(1),
-        applied: z.string().min(1),
-        sourceUrl: z.url(),
-        confidence: z.enum(['high', 'medium', 'low']),
-      })
-    )
-    .max(6),
-  traits: z.array(z.string()).max(4),
-  rationale: z.string().min(1),
-  discoveredAt: z.string().datetime(),
+  spacingUnit: z.object({
+    observed: z.number().finite().min(1).max(32).nullable(),
+    applied: z.number().finite().min(4).max(8),
+    confidence: designConfidenceSchema,
+    evidence: z.array(evidenceSchema).min(1).max(4),
+    transformation: z.string().min(1).optional(),
+  }),
+  overallConfidence: designConfidenceSchema,
+  warnings: z.array(z.string().min(1)).max(6),
 });
 
+export const companyDesignResponseSchema = z.object({
+  profile: companyDesignProfileSchema.nullable(),
+  jobTitle: z.string().nullable(),
+});
+
+export type DesignConfidence = z.infer<typeof designConfidenceSchema>;
+export type DesignSourceKind = z.infer<typeof designSourceKindSchema>;
+export type TypographyCharacter = z.infer<typeof typographyCharacterSchema>;
 export type CompanyDesignProfile = z.infer<
   typeof companyDesignProfileSchema
 >;
