@@ -5,6 +5,7 @@ import { DiffIcon, DownloadIcon, SparklesIcon } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { useCompanyDesign } from '~/hooks/use-company-design';
 import { ValidatedResumeData } from '~/lib/schemas/resume';
 import { Button } from '../ui/button';
 import {
@@ -17,15 +18,20 @@ import { Spinner } from '../ui/spinner';
 import { ResumeDiffDialog } from './resume-diff-dialog';
 import { ResumeDocument } from './resume-document';
 import { ResumeEditForm } from './resume-edit-form';
+import { CompanyDesignPopover } from './company-design-popover';
 
 export function ResumeEditDialog({
   jobId,
   open,
   onOpenChange,
+  companyDesignEnabled,
+  onCompanyDesignEnabledChange,
 }: {
   jobId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  companyDesignEnabled: boolean | undefined;
+  onCompanyDesignEnabledChange: (jobId: string, enabled: boolean) => void;
 }) {
   const [originalData, setOriginalData] =
     useState<ValidatedResumeData | null>(null);
@@ -38,6 +44,19 @@ export function ResumeEditDialog({
   const [preOptimizeData, setPreOptimizeData] =
     useState<ValidatedResumeData | null>(null);
   const [showDiff, setShowDiff] = useState(false);
+  const setCompanyDesignEnabled = useCallback(
+    (enabled: boolean) => {
+      if (jobId) onCompanyDesignEnabledChange(jobId, enabled);
+    },
+    [jobId, onCompanyDesignEnabledChange]
+  );
+  const { profile: designProfile, discovering, refresh } = useCompanyDesign({
+    jobId,
+    active: open,
+    enabled: companyDesignEnabled,
+    onEnabledChange: setCompanyDesignEnabled,
+  });
+  const useCompanyDesignProfile = companyDesignEnabled ?? false;
 
   const fetchResume = useCallback(async (id: string) => {
     setLoading(true);
@@ -142,6 +161,13 @@ export function ResumeEditDialog({
           <div className="flex items-center justify-between">
             <DialogTitle>Edit Resume</DialogTitle>
             <div className="flex items-center gap-2">
+              <CompanyDesignPopover
+                profile={designProfile}
+                enabled={useCompanyDesignProfile}
+                discovering={discovering}
+                onEnabledChange={setCompanyDesignEnabled}
+                onRefresh={refresh}
+              />
               <Button
                 variant="outline"
                 size="sm"
@@ -197,7 +223,14 @@ export function ResumeEditDialog({
               )}
               {editedData && !isDirty && (
                 <PDFDownloadLink
-                  document={<ResumeDocument data={editedData} />}
+                  document={
+                    <ResumeDocument
+                      data={editedData}
+                      designProfile={
+                        useCompanyDesignProfile ? designProfile : null
+                      }
+                    />
+                  }
                   fileName="tailored-resume.pdf"
                 >
                   {({ loading: downloading }) => (
@@ -262,7 +295,12 @@ export function ResumeEditDialog({
                   showToolbar={false}
                   className="rounded-md border"
                 >
-                  <ResumeDocument data={editedData} />
+                  <ResumeDocument
+                    data={editedData}
+                    designProfile={
+                      useCompanyDesignProfile ? designProfile : null
+                    }
+                  />
                 </PDFViewer>
               </motion.div>
             </>

@@ -3,6 +3,7 @@
 import { PDFDownloadLink, PDFViewer } from '@react-pdf/renderer';
 import { DownloadIcon } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { useCompanyDesign } from '~/hooks/use-company-design';
 import { ValidatedResumeData } from '~/lib/schemas/resume';
 import { Button } from '../ui/button';
 import {
@@ -13,22 +14,40 @@ import {
   DialogTitle,
 } from '../ui/dialog';
 import { Spinner } from '../ui/spinner';
+import { CompanyDesignPopover } from './company-design-popover';
 import { ResumeDocument } from './resume-document';
 
 export function PdfPreviewDialog({
   jobId,
   open,
   onOpenChange,
+  companyDesignEnabled,
+  onCompanyDesignEnabledChange,
 }: {
   jobId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  companyDesignEnabled: boolean | undefined;
+  onCompanyDesignEnabledChange: (jobId: string, enabled: boolean) => void;
 }) {
   const [resumeData, setResumeData] = useState<ValidatedResumeData | null>(
     null
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const setCompanyDesignEnabled = useCallback(
+    (enabled: boolean) => {
+      if (jobId) onCompanyDesignEnabledChange(jobId, enabled);
+    },
+    [jobId, onCompanyDesignEnabledChange]
+  );
+  const { profile: designProfile, discovering, refresh } = useCompanyDesign({
+    jobId,
+    active: open,
+    enabled: companyDesignEnabled,
+    onEnabledChange: setCompanyDesignEnabled,
+  });
+  const useCompanyDesignProfile = companyDesignEnabled ?? false;
 
   const fetchResume = useCallback(async (id: string) => {
     setLoading(true);
@@ -60,8 +79,15 @@ export function PdfPreviewDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-6xl w-[90vw] h-[90vh] flex flex-col">
-        <DialogHeader>
+        <DialogHeader className="flex-row items-center justify-between">
           <DialogTitle>Tailored Resume Preview</DialogTitle>
+          <CompanyDesignPopover
+            profile={designProfile}
+            enabled={useCompanyDesignProfile}
+            discovering={discovering}
+            onEnabledChange={setCompanyDesignEnabled}
+            onRefresh={refresh}
+          />
         </DialogHeader>
 
         <div className="flex-1 min-h-0">
@@ -84,7 +110,12 @@ export function PdfPreviewDialog({
               showToolbar={false}
               className="rounded-md border"
             >
-              <ResumeDocument data={resumeData} />
+              <ResumeDocument
+                data={resumeData}
+                designProfile={
+                  useCompanyDesignProfile ? designProfile : null
+                }
+              />
             </PDFViewer>
           )}
         </div>
@@ -92,7 +123,14 @@ export function PdfPreviewDialog({
         {resumeData && (
           <DialogFooter>
             <PDFDownloadLink
-              document={<ResumeDocument data={resumeData} />}
+              document={
+                <ResumeDocument
+                  data={resumeData}
+                  designProfile={
+                    useCompanyDesignProfile ? designProfile : null
+                  }
+                />
+              }
               fileName="tailored-resume.pdf"
             >
               {({ loading: downloading }) => (

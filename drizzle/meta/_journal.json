@@ -22,6 +22,27 @@
       "when": 1772508411838,
       "tag": "0002_last_nextwave",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788105142807,
+      "tag": "0003_yellow_karen_page",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788141306694,
+      "tag": "0004_neat_prowler",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788141389130,
+      "tag": "0005_futuristic_random",
+      "breakpoints": true
     }
   ]
 }

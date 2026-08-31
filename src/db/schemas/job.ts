@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm';
 import {
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -21,6 +22,13 @@ export const jobStatusEnum = pgEnum('job_status', [
   'error',
 ]);
 
+export const companyDesignStatusEnum = pgEnum('company_design_status', [
+  'idle',
+  'discovering',
+  'complete',
+  'error',
+]);
+
 export const job = pgTable(
   'job',
   {
@@ -34,6 +42,10 @@ export const job = pgTable(
       .references(() => user.id, { onDelete: 'cascade' }),
     status: jobStatusEnum('status').default('pending').notNull(),
     content: text('content'),
+    designProfile: jsonb('design_profile'),
+    designStatus: companyDesignStatusEnum('design_status')
+      .default('idle')
+      .notNull(),
     analyzedAt: timestamp('analyzed_at'),
     invalidReason: text('invalid_reason'),
     ...lifecycle_dates,

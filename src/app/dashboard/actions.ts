@@ -47,7 +47,12 @@ export async function retryJobAction(jobId: string) {
 
   const [updated] = await db
     .update(job)
-    .set({ status: 'pending', invalidReason: null })
+    .set({
+      status: 'pending',
+      invalidReason: null,
+      designProfile: null,
+      designStatus: 'idle',
+    })
     .where(
       and(
         eq(job.id, jobId),

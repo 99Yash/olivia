@@ -10,7 +10,10 @@ import {
   View,
 } from '@react-pdf/renderer';
 import { format } from 'date-fns';
+import { useMemo } from 'react';
 import { HtmlToPdf } from '~/lib/html-to-pdf';
+import { deriveResumeTheme, type ResumeTheme } from '~/lib/resume-theme';
+import type { CompanyDesignProfile } from '~/lib/schemas/company-design';
 import { ValidatedResumeData, normalizeSkills } from '~/lib/schemas/resume';
 
 Font.register({
@@ -37,43 +40,35 @@ Font.register({
   ],
 });
 
-const ACCENT_COLOR = '#059669';
-
 const FONT_SIZES = {
   LARGE: 10,
   MEDIUM: 9,
   SMALL: 8.5,
 };
 
-const COLORS = {
-  FOREGROUND: '#000000',
-  MUTED_FOREGROUND: '#333333',
-  MUTED: '#7D817B',
-  BACKGROUND: '#FFFFFF',
-  LINK: '#3d58e1',
-};
-
-const styles = StyleSheet.create({
+function createStyles(theme: ResumeTheme) {
+  return StyleSheet.create({
   page: {
-    paddingTop: 24,
-    paddingRight: 24,
-    paddingBottom: 24,
-    paddingLeft: 24,
-    backgroundColor: COLORS.BACKGROUND,
+    paddingTop: theme.pagePadding,
+    paddingRight: theme.pagePadding,
+    paddingBottom: theme.pagePadding,
+    paddingLeft: theme.pagePadding,
+    backgroundColor: theme.background,
     flexDirection: 'column',
-    fontFamily: 'Roboto',
+    fontFamily: theme.bodyFont,
   },
   headerBar: {
     width: '100%',
-    height: 3,
-    backgroundColor: ACCENT_COLOR,
-    marginVertical: 5,
+    height: theme.headerRuleHeight,
+    backgroundColor: theme.accent,
+    marginTop: theme.headerMarginTop,
+    marginBottom: theme.headerMarginBottom,
   },
   name: {
     fontSize: 24,
-    fontFamily: 'Roboto',
+    fontFamily: theme.headingFont,
     fontWeight: 700,
-    color: COLORS.FOREGROUND,
+    color: theme.foreground,
     textAlign: 'left',
     marginBottom: 4,
     letterSpacing: -0.5,
@@ -83,18 +78,34 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 4,
     fontSize: FONT_SIZES.MEDIUM,
-    color: COLORS.MUTED_FOREGROUND,
+    color: theme.mutedForeground,
+  },
+  companyHeader: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: 2,
+  },
+  companyContact: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    fontSize: FONT_SIZES.SMALL,
+    color: theme.mutedForeground,
+    lineHeight: 1.35,
+    textAlign: 'left',
   },
   description: {
     fontSize: FONT_SIZES.MEDIUM,
-    color: COLORS.MUTED_FOREGROUND,
+    color: theme.mutedForeground,
+    lineHeight: theme.descriptionLineHeight,
   },
   sectionTitle: {
     fontSize: FONT_SIZES.LARGE,
-    fontFamily: 'Roboto',
+    fontFamily: theme.headingFont,
     fontWeight: 700,
-    color: ACCENT_COLOR,
+    color: theme.sectionTitleColor,
     textTransform: 'uppercase',
+    letterSpacing: 0,
     width: '100%',
     marginTop: 3,
     marginBottom: 3,
@@ -111,18 +122,18 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.MEDIUM,
     fontFamily: 'Roboto',
     fontWeight: 700,
-    color: COLORS.FOREGROUND,
+    color: theme.foreground,
   },
   dates: {
     fontSize: FONT_SIZES.MEDIUM,
-    color: COLORS.FOREGROUND,
+    color: theme.foreground,
     fontFamily: 'Roboto',
     fontWeight: 700,
     alignSelf: 'flex-end',
   },
   location: {
     fontSize: FONT_SIZES.MEDIUM,
-    color: COLORS.MUTED,
+    color: theme.muted,
     alignSelf: 'flex-end',
     fontFamily: 'Roboto',
     fontStyle: 'italic',
@@ -131,7 +142,7 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.MEDIUM,
     fontFamily: 'Roboto',
     fontStyle: 'italic',
-    color: COLORS.MUTED_FOREGROUND,
+    color: theme.mutedForeground,
     marginTop: 2,
   },
   sectionItemContainer: {
@@ -143,25 +154,26 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.MEDIUM,
     fontFamily: 'Roboto',
     fontWeight: 700,
-    color: COLORS.FOREGROUND,
+    color: theme.foreground,
   },
   skillsList: {
     fontSize: FONT_SIZES.MEDIUM,
     flex: 1,
-    color: COLORS.MUTED_FOREGROUND,
+    color: theme.mutedForeground,
     fontFamily: 'Roboto',
   },
   sidebarText: {
     fontSize: FONT_SIZES.MEDIUM,
-    color: COLORS.FOREGROUND,
+    color: theme.foreground,
     lineHeight: 1.4,
   },
   sidebarSubtitle: {
     fontSize: FONT_SIZES.MEDIUM,
-    color: COLORS.MUTED_FOREGROUND,
+    color: theme.mutedForeground,
     lineHeight: 1.4,
   },
-});
+  });
+}
 
 function formatDate(
   date: { month?: number | null; year?: number | null } | null | undefined
@@ -194,46 +206,86 @@ function normalizeUrlForHref(url: string): string {
   return `https://${url}`;
 }
 
-export function ResumeDocument({ data }: { data: ValidatedResumeData }) {
+function ContactRow({
+  data,
+  theme,
+  styles,
+}: {
+  data: Pick<
+    ValidatedResumeData,
+    'location' | 'phone_number' | 'email' | 'website_url'
+  >;
+  theme: ResumeTheme;
+  styles: ReturnType<typeof createStyles>;
+}) {
+  return (
+    <View
+      style={
+        theme.variant === 'company-informed'
+          ? styles.companyContact
+          : styles.contactInfo
+      }
+    >
+      {data.location && <Text>{data.location}</Text>}
+      {data.phone_number && (
+        <>
+          {data.location && <Text>•</Text>}
+          <Text>{String(data.phone_number)}</Text>
+        </>
+      )}
+      {data.email && (
+        <>
+          {(data.phone_number || data.location) && <Text>•</Text>}
+          <Text>{data.email}</Text>
+        </>
+      )}
+      {data.website_url && (
+        <>
+          {(data.phone_number || data.email || data.location) && <Text>•</Text>}
+          <Link
+            style={{
+              color: theme.link,
+              textDecoration: 'none',
+              ...(theme.variant === 'company-informed'
+                ? {}
+                : { fontSize: FONT_SIZES.SMALL }),
+            }}
+            src={normalizeUrlForHref(data.website_url)}
+          >
+            {data.website_url}
+          </Link>
+        </>
+      )}
+    </View>
+  );
+}
+
+export function ResumeDocument({
+  data,
+  designProfile,
+}: {
+  data: ValidatedResumeData;
+  designProfile?: CompanyDesignProfile | null;
+}) {
+  const theme = useMemo(
+    () => deriveResumeTheme(designProfile),
+    [designProfile]
+  );
+  const styles = useMemo(() => createStyles(theme), [theme]);
   return (
     <Document title={`${data.full_name ?? 'Resume'}`}>
       <Page size="A4" style={styles.page}>
-        {data.full_name && <Text style={styles.name}>{data.full_name}</Text>}
-
-        <View style={styles.contactInfo}>
-          {data.location && <Text>{data.location}</Text>}
-          {data.phone_number && (
-            <>
-              {data.location && <Text>•</Text>}
-              <Text>{String(data.phone_number)}</Text>
-            </>
-          )}
-          {data.email && (
-            <>
-              {(data.phone_number || data.location) && <Text>•</Text>}
-              <Text>{data.email}</Text>
-            </>
-          )}
-          {data.website_url && (
-            <>
-              {(data.phone_number || data.email || data.location) && (
-                <Text>• </Text>
-              )}
-              <Text>
-                <Link
-                  style={{
-                    color: COLORS.LINK,
-                    textDecoration: 'none',
-                    fontSize: FONT_SIZES.SMALL,
-                  }}
-                  src={normalizeUrlForHref(data.website_url)}
-                >
-                  {data.website_url}
-                </Link>
-              </Text>
-            </>
-          )}
-        </View>
+        {theme.variant === 'company-informed' ? (
+          <View style={styles.companyHeader}>
+            {data.full_name && <Text style={styles.name}>{data.full_name}</Text>}
+            <ContactRow data={data} theme={theme} styles={styles} />
+          </View>
+        ) : (
+          <>
+            {data.full_name && <Text style={styles.name}>{data.full_name}</Text>}
+            <ContactRow data={data} theme={theme} styles={styles} />
+          </>
+        )}
         <View style={styles.headerBar} />
 
         {/* Summary */}
@@ -436,7 +488,7 @@ export function ResumeDocument({ data }: { data: ValidatedResumeData }) {
                         src={normalizeUrlForHref(cert.url)}
                         style={{
                           ...styles.itemTitle,
-                          color: COLORS.LINK,
+                          color: theme.link,
                           textDecoration: 'none',
                         }}
                       >
@@ -530,7 +582,7 @@ export function ResumeDocument({ data }: { data: ValidatedResumeData }) {
                         src={normalizeUrlForHref(patent.url)}
                         style={{
                           ...styles.itemTitle,
-                          color: COLORS.LINK,
+                          color: theme.link,
                           textDecoration: 'none',
                         }}
                       >

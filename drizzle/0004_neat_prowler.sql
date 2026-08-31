@@ -1,0 +1,2 @@
+CREATE TYPE "public"."company_design_status" AS ENUM('idle', 'discovering', 'complete', 'error');--> statement-breakpoint
+ALTER TABLE "job" ADD COLUMN "design_status" "company_design_status" DEFAULT 'idle' NOT NULL;

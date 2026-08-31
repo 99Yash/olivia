@@ -1,8 +1,14 @@
 import { getErrorMessage } from '../errors';
 import { tailorResume, verifyJobDescription } from './ai.service';
-import { updateJobStatus } from './job.service';
+import {
+  beginJobDesignDiscovery,
+  markJobDesignDiscoveryFailed,
+  updateJobDesignProfile,
+  updateJobStatus,
+} from './job.service';
 import { addResume, getBaseResume } from './resume.service';
 import { scrapeJobPage } from './scrape.service';
+import { discoverCompanyDesign } from './company-design.service';
 
 export async function runTailoringWorkflow(
   jobId: string,
@@ -12,7 +18,8 @@ export async function runTailoringWorkflow(
   try {
     // 1. Scraping
     await updateJobStatus(jobId, 'scraping');
-    const { markdown, title } = await scrapeJobPage(url);
+    const { markdown, title, links, hiringOrganization } =
+      await scrapeJobPage(url);
 
     // 2. Validate job description
     const { valid, reason } = await verifyJobDescription(markdown);
@@ -53,6 +60,26 @@ export async function runTailoringWorkflow(
 
     // 7. Complete
     await updateJobStatus(jobId, 'complete');
+
+    // 8. Discover optional design data after the resume is available.
+    const designDiscoveryStarted = await beginJobDesignDiscovery(jobId, userId);
+    if (!designDiscoveryStarted) return;
+    try {
+      const profile = await discoverCompanyDesign({
+        url,
+        title,
+        content: markdown,
+        links,
+        hiringOrganization,
+      });
+      await updateJobDesignProfile(jobId, userId, profile);
+    } catch (error) {
+      console.error(
+        'Company design discovery failed after tailoring:',
+        getErrorMessage(error)
+      );
+      await markJobDesignDiscoveryFailed(jobId, userId);
+    }
   } catch (error) {
     const message = getErrorMessage(error);
     await updateJobStatus(jobId, 'error', { invalidReason: message });

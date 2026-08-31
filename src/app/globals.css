@@ -191,3 +191,24 @@
   .rich-text-editor .italic { font-style: italic; }
   .rich-text-editor .line-through { text-decoration: line-through; }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .company-design-popover {
+    animation: none;
+    transition: opacity 150ms ease;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .company-design-popover {
+    background: var(--popover);
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .company-design-popover {
+    background: var(--popover);
+    border-color: var(--foreground);
+  }
+}

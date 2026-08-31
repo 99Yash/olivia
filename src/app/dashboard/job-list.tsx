@@ -8,7 +8,7 @@ import {
   PencilIcon,
   RotateCwIcon,
 } from 'lucide-react';
-import { useState, useTransition } from 'react';
+import { useCallback, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { retryJobAction } from './actions';
 import { Badge } from '~/components/ui/badge';
@@ -83,7 +83,16 @@ export function JobList({ jobs }: { jobs: Job[] }) {
   const [previewJobId, setPreviewJobId] = useState<string | null>(null);
   const [editJobId, setEditJobId] = useState<string | null>(null);
   const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [companyDesignByJob, setCompanyDesignByJob] = useState<
+    Record<string, boolean | undefined>
+  >({});
   const [isPending, startTransition] = useTransition();
+  const setCompanyDesignEnabled = useCallback(
+    (jobId: string, enabled: boolean) => {
+      setCompanyDesignByJob((current) => ({ ...current, [jobId]: enabled }));
+    },
+    []
+  );
 
   if (jobs.length === 0) {
     return (
@@ -194,6 +203,10 @@ export function JobList({ jobs }: { jobs: Job[] }) {
       <PdfPreviewDialog
         jobId={previewJobId}
         open={!!previewJobId}
+        companyDesignEnabled={
+          previewJobId ? companyDesignByJob[previewJobId] : undefined
+        }
+        onCompanyDesignEnabledChange={setCompanyDesignEnabled}
         onOpenChange={(open) => {
           if (!open) setPreviewJobId(null);
         }}
@@ -202,6 +215,10 @@ export function JobList({ jobs }: { jobs: Job[] }) {
       <ResumeEditDialog
         jobId={editJobId}
         open={!!editJobId}
+        companyDesignEnabled={
+          editJobId ? companyDesignByJob[editJobId] : undefined
+        }
+        onCompanyDesignEnabledChange={setCompanyDesignEnabled}
         onOpenChange={(open) => {
           if (!open) setEditJobId(null);
         }}
