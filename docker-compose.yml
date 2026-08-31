@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: olivia-postgres
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5001:5432" # 5000 requested but macOS AirPlay Receiver occupies *:5000 (ControlCe). Use 5001 so host can connect. To use 5000: System Settings → General → AirDrop & Handoff → AirPlay Receiver → OFF, then change back to 5000.
+    environment:
+      POSTGRES_USER: olivia
+      POSTGRES_PASSWORD: olivia
+      POSTGRES_DB: olivia
+    volumes:
+      - olivia_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U olivia -d olivia"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  olivia_pgdata:
+    name: olivia_pgdata
