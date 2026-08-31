@@ -23,7 +23,7 @@ export function setLocalStorageItem<K extends LocalStorageKey>(
     }
 
     localStorage.setItem(key, JSON.stringify(validationResult.data));
-  } catch (error) {
+  } catch {
     // Failed to set item
   }
 }
@@ -68,7 +68,7 @@ export function getLocalStorageItem<K extends LocalStorageKey>(
 export function removeLocalStorageItem(key: LocalStorageKey): void {
   try {
     localStorage.removeItem(key);
-  } catch (error) {
+  } catch {
     // Failed to remove item
   }
 }

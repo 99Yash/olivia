@@ -1,7 +1,7 @@
 'use client';
 
 import { PlusIcon, TrashIcon } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { RichTextEditor } from '~/components/rich-text-editor';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
@@ -16,14 +16,20 @@ import {
 import { ValidatedResumeData } from '~/lib/schemas/resume';
 import { MonthYearPicker, type MonthYearValue } from './month-year-picker';
 
-function debounce<T extends (...args: any[]) => void>(fn: T, ms: number): T & { cancel: () => void } {
-  let timer: ReturnType<typeof setTimeout>;
-  const debounced = ((...args: any[]) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), ms);
-  }) as unknown as T & { cancel: () => void };
-  debounced.cancel = () => clearTimeout(timer);
-  return debounced;
+type UpdateField = <Field extends keyof ValidatedResumeData>(
+  field: Field,
+  value: ValidatedResumeData[Field],
+  debounce?: boolean
+) => void;
+
+function useSynchronizedState<Value>(value: Value, source: unknown) {
+  const [local, setLocal] = useState(value);
+  const [previousSource, setPreviousSource] = useState(source);
+  if (!Object.is(source, previousSource)) {
+    setPreviousSource(source);
+    setLocal(value);
+  }
+  return [local, setLocal] as const;
 }
 
 function AddButton({ title, onClick }: { title: string; onClick: () => void }) {
@@ -142,31 +148,23 @@ function ContactSection({
   updateField,
 }: {
   resumeData: ValidatedResumeData;
-  updateField: (field: string, value: any, deb?: boolean) => void;
+  updateField: UpdateField;
 }) {
-  const [local, setLocal] = useState({
+  const contact = {
     full_name: resumeData.full_name ?? '',
     phone_number: resumeData.phone_number ?? '',
     website_url: resumeData.website_url ?? '',
     email: resumeData.email ?? '',
     location: resumeData.location ?? '',
-  });
-
-  useEffect(() => {
-    setLocal({
-      full_name: resumeData.full_name ?? '',
-      phone_number: resumeData.phone_number ?? '',
-      website_url: resumeData.website_url ?? '',
-      email: resumeData.email ?? '',
-      location: resumeData.location ?? '',
-    });
-  }, [
-    resumeData.full_name,
-    resumeData.phone_number,
-    resumeData.website_url,
-    resumeData.email,
-    resumeData.location,
-  ]);
+  };
+  const contactSource = [
+    contact.full_name,
+    contact.phone_number,
+    contact.website_url,
+    contact.email,
+    contact.location,
+  ].join('\u0000');
+  const [local, setLocal] = useSynchronizedState(contact, contactSource);
 
   const handleChange = (field: keyof typeof local, value: string) => {
     setLocal((prev) => ({ ...prev, [field]: value }));
@@ -223,7 +221,7 @@ function SummarySection({
   updateField,
 }: {
   resumeData: ValidatedResumeData;
-  updateField: (field: string, value: any, deb?: boolean) => void;
+  updateField: UpdateField;
 }) {
   return (
     <AccordionItem value="summary">
@@ -247,7 +245,7 @@ function HighlightsSection({
   updateField,
 }: {
   resumeData: ValidatedResumeData;
-  updateField: (field: string, value: any, deb?: boolean) => void;
+  updateField: UpdateField;
 }) {
   return (
     <AccordionItem value="highlights">
@@ -271,12 +269,11 @@ function ExperienceSection({
   updateField,
 }: {
   resumeData: ValidatedResumeData;
-  updateField: (field: string, value: any, deb?: boolean) => void;
+  updateField: UpdateField;
 }) {
-  const [local, setLocal] = useState(resumeData.experiences ?? []);
-  useEffect(
-    () => setLocal(resumeData.experiences ?? []),
-    [resumeData.experiences]
+  const [local, setLocal] = useSynchronizedState(
+    resumeData.experiences ?? [],
+    resumeData.experiences
   );
 
   const update = (updated: typeof local, deb = false) => {
@@ -424,12 +421,11 @@ function EducationSection({
   updateField,
 }: {
   resumeData: ValidatedResumeData;
-  updateField: (field: string, value: any, deb?: boolean) => void;
+  updateField: UpdateField;
 }) {
-  const [local, setLocal] = useState(resumeData.education ?? []);
-  useEffect(
-    () => setLocal(resumeData.education ?? []),
-    [resumeData.education]
+  const [local, setLocal] = useSynchronizedState(
+    resumeData.education ?? [],
+    resumeData.education
   );
 
   const update = (updated: typeof local, deb = false) => {
@@ -526,12 +522,11 @@ function ProjectsSection({
   updateField,
 }: {
   resumeData: ValidatedResumeData;
-  updateField: (field: string, value: any, deb?: boolean) => void;
+  updateField: UpdateField;
 }) {
-  const [local, setLocal] = useState(resumeData.projects ?? []);
-  useEffect(
-    () => setLocal(resumeData.projects ?? []),
-    [resumeData.projects]
+  const [local, setLocal] = useSynchronizedState(
+    resumeData.projects ?? [],
+    resumeData.projects
   );
 
   const update = (updated: typeof local, deb = false) => {
@@ -617,10 +612,12 @@ function SkillsSection({
   updateField,
 }: {
   resumeData: ValidatedResumeData;
-  updateField: (field: string, value: any, deb?: boolean) => void;
+  updateField: UpdateField;
 }) {
-  const [local, setLocal] = useState(resumeData.skills ?? []);
-  useEffect(() => setLocal(resumeData.skills ?? []), [resumeData.skills]);
+  const [local, setLocal] = useSynchronizedState(
+    resumeData.skills ?? [],
+    resumeData.skills
+  );
 
   const update = (updated: typeof local, deb = false) => {
     setLocal(updated);
@@ -687,12 +684,11 @@ function CertificationsSection({
   updateField,
 }: {
   resumeData: ValidatedResumeData;
-  updateField: (field: string, value: any, deb?: boolean) => void;
+  updateField: UpdateField;
 }) {
-  const [local, setLocal] = useState(resumeData.certifications ?? []);
-  useEffect(
-    () => setLocal(resumeData.certifications ?? []),
-    [resumeData.certifications]
+  const [local, setLocal] = useSynchronizedState(
+    resumeData.certifications ?? [],
+    resumeData.certifications
   );
 
   const update = (updated: typeof local, deb = false) => {
@@ -781,12 +777,11 @@ function AwardsSection({
   updateField,
 }: {
   resumeData: ValidatedResumeData;
-  updateField: (field: string, value: any, deb?: boolean) => void;
+  updateField: UpdateField;
 }) {
-  const [local, setLocal] = useState(resumeData.awards ?? []);
-  useEffect(
-    () => setLocal(resumeData.awards ?? []),
-    [resumeData.awards]
+  const [local, setLocal] = useSynchronizedState(
+    resumeData.awards ?? [],
+    resumeData.awards
   );
 
   const update = (updated: typeof local, deb = false) => {
@@ -877,12 +872,11 @@ function PatentsSection({
   updateField,
 }: {
   resumeData: ValidatedResumeData;
-  updateField: (field: string, value: any, deb?: boolean) => void;
+  updateField: UpdateField;
 }) {
-  const [local, setLocal] = useState(resumeData.patents ?? []);
-  useEffect(
-    () => setLocal(resumeData.patents ?? []),
-    [resumeData.patents]
+  const [local, setLocal] = useSynchronizedState(
+    resumeData.patents ?? [],
+    resumeData.patents
   );
 
   const update = (updated: typeof local, deb = false) => {
@@ -986,12 +980,11 @@ function LanguagesSection({
   updateField,
 }: {
   resumeData: ValidatedResumeData;
-  updateField: (field: string, value: any, deb?: boolean) => void;
+  updateField: UpdateField;
 }) {
-  const [local, setLocal] = useState(resumeData.languages ?? []);
-  useEffect(
-    () => setLocal(resumeData.languages ?? []),
-    [resumeData.languages]
+  const [local, setLocal] = useSynchronizedState(
+    resumeData.languages ?? [],
+    resumeData.languages
   );
 
   const update = (updated: typeof local, deb = false) => {
@@ -1058,30 +1051,41 @@ interface ResumeEditFormProps {
 }
 
 export function ResumeEditForm({ resumeData, onChange }: ResumeEditFormProps) {
-  const resumeDataRef = useRef(resumeData);
-  resumeDataRef.current = resumeData;
-
-  const debouncedUpdate = useMemo(
-    () =>
-      debounce((field: string, value: any) => {
-        onChange({ ...resumeDataRef.current, [field]: value });
-      }, 300),
-    [onChange]
-  );
+  const latestResumeData = useRef(resumeData);
+  const pendingChanges = useRef<Partial<ValidatedResumeData>>({});
+  const updateTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    return () => debouncedUpdate.cancel();
-  }, [debouncedUpdate]);
+    latestResumeData.current = resumeData;
+  }, [resumeData]);
 
-  const updateField = useCallback(
-    (field: string, value: any, deb = false) => {
-      if (deb) {
-        debouncedUpdate(field, value);
+  const flushChanges = useCallback(() => {
+    const changes = pendingChanges.current;
+    pendingChanges.current = {};
+    updateTimer.current = null;
+    onChange({ ...latestResumeData.current, ...changes });
+  }, [onChange]);
+
+  useEffect(() => {
+    return () => {
+      if (updateTimer.current) clearTimeout(updateTimer.current);
+    };
+  }, []);
+
+  const updateField = useCallback<UpdateField>(
+    (field, value, shouldDebounce = false) => {
+      pendingChanges.current = {
+        ...pendingChanges.current,
+        [field]: value,
+      };
+      if (updateTimer.current) clearTimeout(updateTimer.current);
+      if (shouldDebounce) {
+        updateTimer.current = setTimeout(flushChanges, 300);
       } else {
-        onChange({ ...resumeDataRef.current, [field]: value });
+        flushChanges();
       }
     },
-    [debouncedUpdate, onChange]
+    [flushChanges]
   );
 
   const sectionProps = { resumeData, updateField };

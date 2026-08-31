@@ -1,7 +1,8 @@
 import { Text, View } from '@react-pdf/renderer';
+import type { Styles } from '@react-pdf/renderer';
 import React from 'react';
 
-type Style = Record<string, any>;
+type Style = Styles[string];
 
 /**
  * Converts an HTML string (from the rich text editor) into @react-pdf/renderer components.

@@ -79,7 +79,7 @@ export function ResumeUploadForm({ className }: ResumeUploadFormProps = {}) {
 
     // Trigger the upload
     try {
-      const res = await uploadFiles(files);
+      await uploadFiles(files);
 
       toast.success('Resume uploaded successfully!', {
         description: 'Your resume has been analyzed and is ready.',
@@ -99,7 +99,7 @@ export function ResumeUploadForm({ className }: ResumeUploadFormProps = {}) {
         toast.error('An unknown error occurred during upload');
       }
     }
-  }, [files, uploadFiles, form]);
+  }, [files, uploadFiles, form, router]);
 
   return (
     <div className={className}>
