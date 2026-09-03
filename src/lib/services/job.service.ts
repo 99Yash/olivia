@@ -43,11 +43,23 @@ export async function updateJobDesignProfile(
   return updated ?? null;
 }
 
+// A discovery run that keeps the lock for longer than this window is dead.
+// The server that held it restarted or crashed, so a new run may take over.
+export const DESIGN_DISCOVERY_STALE_MS = 2 * 60 * 1_000;
+
+export function isDesignDiscoveryActive(
+  target: Pick<Job, 'designStatus' | 'updatedAt'>
+) {
+  if (target.designStatus !== 'discovering') return false;
+  if (!target.updatedAt) return true;
+  return Date.now() - target.updatedAt.getTime() < DESIGN_DISCOVERY_STALE_MS;
+}
+
 export async function beginJobDesignDiscovery(
   jobId: string,
   userId: string
 ) {
-  const staleDiscoveryTime = new Date(Date.now() - 2 * 60 * 1_000);
+  const staleDiscoveryTime = new Date(Date.now() - DESIGN_DISCOVERY_STALE_MS);
   const [updated] = await db
     .update(job)
     .set({ designStatus: 'discovering' })

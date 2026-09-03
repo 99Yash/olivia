@@ -7,6 +7,7 @@ import { discoverCompanyDesignForJob } from '~/lib/services/company-design.servi
 import {
   beginJobDesignDiscovery,
   getJobByIdAndUser,
+  isDesignDiscoveryActive,
   markJobDesignDiscoveryFailed,
   updateJobDesignProfile,
 } from '~/lib/services/job.service';
@@ -41,9 +42,17 @@ export async function GET(
     );
   }
 
+  // A stale lock means the run died. Report an error so the client can retry.
+  const status =
+    result.job.designStatus === 'discovering' &&
+    !isDesignDiscoveryActive(result.job)
+      ? 'error'
+      : result.job.designStatus;
+
   return NextResponse.json({
     profile: profile.data,
     jobTitle: result.job.title,
+    status,
   });
 }
 
@@ -58,7 +67,10 @@ export async function POST(
   }
   if (result.job.status !== 'complete' || !result.job.content) {
     return NextResponse.json(
-      { error: 'Wait until resume tailoring is complete.' },
+      {
+        error: 'Wait until resume tailoring is complete.',
+        code: 'tailoring_incomplete',
+      },
       { status: 409 }
     );
   }
@@ -73,7 +85,10 @@ export async function POST(
       Date.now() - new Date(observedAt).getTime() < REFRESH_COOLDOWN_MS
     ) {
       return NextResponse.json(
-        { error: 'Wait one minute before checking the public sources again.' },
+        {
+          error: 'Wait one minute before checking the public sources again.',
+          code: 'refresh_cooldown',
+        },
         { status: 429 }
       );
     }
@@ -82,7 +97,10 @@ export async function POST(
   const started = await beginJobDesignDiscovery(jobId, result.userId);
   if (!started) {
     return NextResponse.json(
-      { error: 'Company design discovery is already in progress.' },
+      {
+        error: 'Company design discovery is already in progress.',
+        code: 'discovery_in_progress',
+      },
       { status: 409 }
     );
   }
@@ -92,12 +110,19 @@ export async function POST(
       await discoverCompanyDesignForJob(result.job)
     );
     await updateJobDesignProfile(jobId, result.userId, profile);
-    return NextResponse.json({ profile, jobTitle: result.job.title });
+    return NextResponse.json({
+      profile,
+      jobTitle: result.job.title,
+      status: 'complete',
+    });
   } catch (error) {
     console.error('Company design discovery failed:', getErrorMessage(error));
     await markJobDesignDiscoveryFailed(jobId, result.userId);
     return NextResponse.json(
-      { error: 'Could not find a reliable public design source.' },
+      {
+        error: 'Could not find a reliable public design source.',
+        code: 'discovery_failed',
+      },
       { status: 502 }
     );
   }

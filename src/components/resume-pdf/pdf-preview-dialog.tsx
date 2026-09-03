@@ -41,7 +41,12 @@ export function PdfPreviewDialog({
     },
     [jobId, onCompanyDesignEnabledChange]
   );
-  const { profile: designProfile, discovering, refresh } = useCompanyDesign({
+  const {
+    profile: designProfile,
+    status: designStatus,
+    discovering,
+    refresh,
+  } = useCompanyDesign({
     jobId,
     active: open,
     enabled: companyDesignEnabled,
@@ -83,6 +88,7 @@ export function PdfPreviewDialog({
           <DialogTitle>Tailored Resume Preview</DialogTitle>
           <CompanyDesignPopover
             profile={designProfile}
+            status={designStatus}
             enabled={useCompanyDesignProfile}
             discovering={discovering}
             onEnabledChange={setCompanyDesignEnabled}

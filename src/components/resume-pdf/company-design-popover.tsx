@@ -6,7 +6,10 @@ import {
   RefreshCwIcon,
   ShieldCheckIcon,
 } from 'lucide-react';
-import type { CompanyDesignProfile } from '~/lib/schemas/company-design';
+import type {
+  CompanyDesignProfile,
+  CompanyDesignStatus,
+} from '~/lib/schemas/company-design';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import {
@@ -56,12 +59,14 @@ function signalRows(profile: CompanyDesignProfile) {
 
 export function CompanyDesignPopover({
   profile,
+  status,
   enabled,
   discovering,
   onEnabledChange,
   onRefresh,
 }: {
   profile: CompanyDesignProfile | null;
+  status: CompanyDesignStatus;
   enabled: boolean;
   discovering: boolean;
   onEnabledChange: (enabled: boolean) => void;
@@ -84,10 +89,16 @@ export function CompanyDesignPopover({
               className="size-3 rounded-full ring-1 ring-black/10"
               style={{ backgroundColor: profile.accent.applied }}
             />
+          ) : discovering ? (
+            <RefreshCwIcon className="size-4 animate-spin" />
           ) : (
             <PaletteIcon className="size-4" />
           )}
-          {profile ? 'Company-informed design' : 'Find company design'}
+          {profile
+            ? 'Company-informed design'
+            : discovering
+              ? 'Finding design...'
+              : 'Find company design'}
         </Button>
       </PopoverTrigger>
       <PopoverContent
@@ -237,6 +248,17 @@ export function CompanyDesignPopover({
               Olivia will check official public sources and map a small set of
               signals to an ATS-safe resume design.
             </p>
+            {status === 'error' && !discovering && (
+              <p className="mt-3 rounded-md border border-amber-500/25 bg-amber-500/8 px-3 py-2 text-xs">
+                The last check found no reliable public source. You can try
+                again.
+              </p>
+            )}
+            {discovering && (
+              <p className="mt-3 text-xs text-muted-foreground">
+                A check is running. This step takes up to a minute.
+              </p>
+            )}
             <Button
               className="mt-4 w-full"
               size="sm"

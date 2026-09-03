@@ -1,6 +1,12 @@
 import { z } from 'zod';
 
 export const designConfidenceSchema = z.enum(['high', 'medium', 'low']);
+export const companyDesignStatusSchema = z.enum([
+  'idle',
+  'discovering',
+  'complete',
+  'error',
+]);
 export const designSourceKindSchema = z.enum([
   'official-design-system',
   'official-brand-guide',
@@ -62,9 +68,11 @@ export const companyDesignProfileSchema = z.object({
 export const companyDesignResponseSchema = z.object({
   profile: companyDesignProfileSchema.nullable(),
   jobTitle: z.string().nullable(),
+  status: companyDesignStatusSchema,
 });
 
 export type DesignConfidence = z.infer<typeof designConfidenceSchema>;
+export type CompanyDesignStatus = z.infer<typeof companyDesignStatusSchema>;
 export type DesignSourceKind = z.infer<typeof designSourceKindSchema>;
 export type TypographyCharacter = z.infer<typeof typographyCharacterSchema>;
 export type CompanyDesignProfile = z.infer<

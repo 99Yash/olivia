@@ -50,7 +50,12 @@ export function ResumeEditDialog({
     },
     [jobId, onCompanyDesignEnabledChange]
   );
-  const { profile: designProfile, discovering, refresh } = useCompanyDesign({
+  const {
+    profile: designProfile,
+    status: designStatus,
+    discovering,
+    refresh,
+  } = useCompanyDesign({
     jobId,
     active: open,
     enabled: companyDesignEnabled,
@@ -163,6 +168,7 @@ export function ResumeEditDialog({
             <div className="flex items-center gap-2">
               <CompanyDesignPopover
                 profile={designProfile}
+                status={designStatus}
                 enabled={useCompanyDesignProfile}
                 discovering={discovering}
                 onEnabledChange={setCompanyDesignEnabled}
