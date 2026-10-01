@@ -2,9 +2,16 @@ import { Firecrawl } from '@mendable/firecrawl-js';
 import type { BrandingProfile, Document, SearchResultWeb } from '@mendable/firecrawl-js';
 import { getErrorMessage } from '../errors';
 
-const firecrawl = new Firecrawl({
-  apiKey: process.env.FIRECRAWL_API_KEY!,
-});
+let firecrawlClient: Firecrawl | null = null;
+
+function getFirecrawl(): Firecrawl {
+  if (!firecrawlClient) {
+    firecrawlClient = new Firecrawl({
+      apiKey: process.env.FIRECRAWL_API_KEY!,
+    });
+  }
+  return firecrawlClient;
+}
 
 const FIRECRAWL_TIMEOUT_MS = 10_000;
 
@@ -96,7 +103,7 @@ export function extractHiringOrganization(
 }
 
 export async function scrapeJobPage(url: string) {
-  const result = await firecrawl.scrape(url, {
+  const result = await getFirecrawl().scrape(url, {
     formats: ['markdown', 'rawHtml', 'links'],
     onlyMainContent: true,
     waitFor: 3000,
@@ -119,7 +126,7 @@ export async function searchPublicPages(
   query: string,
   limit = 4
 ): Promise<PublicSearchResult[]> {
-  const result = await firecrawl.search(query, {
+  const result = await getFirecrawl().search(query, {
     sources: ['web'],
     limit,
     timeout: FIRECRAWL_TIMEOUT_MS,
@@ -140,7 +147,7 @@ export async function searchPublicPages(
 }
 
 export async function scrapePublicPage(url: string): Promise<PublicPage> {
-  const result = await firecrawl.scrape(url, {
+  const result = await getFirecrawl().scrape(url, {
     formats: ['markdown', 'links', 'branding'],
     onlyMainContent: false,
     timeout: FIRECRAWL_TIMEOUT_MS,
